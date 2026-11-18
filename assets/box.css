@@ -478,3 +478,17 @@ html.live-open .float-cta{display:none}
 .piece.text.feature .sum{font-size:1.08rem;max-width:72ch}
 .form-h{margin:34px 0 8px;font:italic 900 1.6rem var(--display);text-transform:uppercase}
 .timeline.form span{color:var(--red)}
+
+/* Con mi nombre: registros públicos con su nombre */
+.firma-grid{list-style:none;margin:clamp(26px,5vh,46px) 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:14px}
+.firma-grid a{display:flex;flex-direction:column;height:100%;border:3px solid var(--ink);background:var(--bg);color:var(--ink);text-decoration:none;transition:transform .3s var(--out),box-shadow .3s var(--out)}
+.f-src{display:flex;justify-content:space-between;gap:12px;background:var(--ink);color:var(--bg);padding:9px 16px;font:italic 800 .92rem/1.2 var(--display);text-transform:uppercase}
+.f-src i{font-style:italic;color:#ff5a52;white-space:nowrap}
+.f-k{display:block;margin:18px 16px 0;font:italic 800 .78rem var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.f-q{margin:6px 16px 0;font:700 1.08rem/1.38 var(--text);overflow-wrap:anywhere}
+.f-q mark{background:var(--red);color:#fff;padding:.02em .22em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.f-what{margin:14px 16px 0;font-size:.95rem;color:var(--muted)}
+.f-go{margin:auto 16px 0;padding:16px 0;font:italic 800 1rem var(--display);text-transform:uppercase;border-top:2px solid var(--soft)}
+.f-go b{display:inline-block;color:var(--red);transition:transform .3s var(--out)}
+@media (hover:hover){.firma-grid a:hover{transform:translate(-5px,-5px);box-shadow:8px 8px 0 var(--red)}.firma-grid a:hover .f-go b{transform:translate(3px,-3px)}}
+.firma-grid a:focus-visible{outline:3px solid var(--red);outline-offset:3px}
