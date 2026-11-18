@@ -428,3 +428,4 @@ html[data-theme=dark] .hero-map .lit{-webkit-mask:none;mask:none;clip-path:circl
 /* el número de área vuelve al box logo: caja roja, blanco, itálica */
 .area-folio{background:var(--red);color:#fff;font-style:italic;font-size:clamp(2.2rem,4.2vw,4.2rem);padding:.08em .2em .1em .12em;line-height:1}
 @media (max-width:640px){.hero-copy{padding-top:58px}}
+html{overflow-x:clip}
