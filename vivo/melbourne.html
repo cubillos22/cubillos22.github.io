@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Un parque de Melbourne a 1,7 cm por píxel · Miguel Cubillos</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400..900;1,400..900&family=Archivo:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vivo.css?v=4">
+<style>
+#stage{position:absolute;inset:0;overflow:hidden;background:#000;cursor:grab;touch-action:none}
+#stage.drag{cursor:grabbing}
+.plate{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.plate img{position:absolute;inset:0;width:100%;height:100%;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.plate .top{clip-path:inset(0 calc(100% - var(--x,50%)) 0 0)}
+.cut{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:#E2231A;pointer-events:none;left:var(--sx,50%)}
+.cut b{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;gap:0;font:italic 800 .82rem var(--serif);white-space:nowrap}
+.cut b span{padding:6px 9px;background:#E2231A;color:#fff}.cut b span+span{background:#fff;color:#000}
+.tools{position:absolute;right:14px;top:14px;z-index:500;display:flex;flex-direction:column;gap:6px}
+.tools .btn{width:44px;height:44px;padding:0;font-size:1.2rem;background:#000;color:#fff}
+#sw{width:100%}
+</style>
+</head><body>
+<div id="stage" aria-label="Ortomosaico y relieve de un parque de Melbourne">
+ <div class="plate" id="plate"><img class="bot" id="rel" alt="" src="data/melb-relieve.webp"><img class="top" id="ort" alt="" src="data/melb-orto.webp"></div>
+ <div class="cut" id="cut"><b><span data-t="lo">Ortomosaico</span><span data-t="hi">Relieve</span></b></div>
+</div>
+<div class="tools"><button class="btn" id="zin" type="button" aria-label="Acercar">+</button><button class="btn" id="zout" type="button" aria-label="Alejar">−</button></div>
+<aside class="panel" id="panel">
+ <button class="btn fold" id="fold" type="button" aria-label="Plegar panel">–</button>
+ <p class="k" data-t="kicker">Proyecto propio · Melbourne, Australia · dic 2023</p>
+ <h1 data-t="title">Un parque de Melbourne a 1,7 cm por píxel</h1>
+ <p data-t="lead">60 fotos de dron convertidas en ortomosaico y modelo de superficie. Mueve el mouse (o la barra) para correr la cortina; rueda o los botones para acercar; arrastra para moverte.</p>
+ <label class="sl"><span data-t="sw">Cortina</span><input id="sw" type="range" min="0" max="100" value="50"></label>
+ <div class="row"><button class="btn" id="reset" type="button" data-t="reset">Vista inicial</button></div>
+ <p class="k" data-t="stats">10.837 × 11.028 píxeles · unos 186 × 188 m · se muestra a 6 cm por píxel</p>
+ <p class="lim" data-t="lim">Georreferenciado con 5 puntos de control sobre una imagen de referencia (polinomio de primer orden), sin puntos medidos en campo. Las alturas no están amarradas a un datum vertical y las manchas lisas del relieve son zonas interpoladas.</p>
+</aside>
+<script>
+const EN = new URLSearchParams(location.search).get("lang") === "en";
+const T = EN ? {kicker:"Own project · Melbourne, Australia · Dec 2023", title:"A Melbourne park at 1.7 cm per pixel",
+  lead:"60 drone photos turned into an orthomosaic and a surface model. Move the mouse (or the bar) to slide the curtain; scroll or use the buttons to zoom; drag to move.",
+  sw:"Curtain", reset:"Start view", lo:"Orthomosaic", hi:"Relief", stats:"10,837 × 11,028 pixels · about 186 × 188 m · shown at 6 cm per pixel",
+  lim:"Georeferenced with 5 control points on a reference image (first-order polynomial), with no points measured in the field. Heights are not tied to a vertical datum, and the smooth patches in the relief are interpolated areas."} : {};
+if (EN) { document.documentElement.lang = "en"; document.title = "A Melbourne park at 1.7 cm per pixel · Miguel Cubillos"; document.querySelectorAll("[data-t]").forEach(e => { if (T[e.dataset.t]) e.textContent = T[e.dataset.t]; }); }
+const $ = id => document.getElementById(id);
+$("fold").onclick = () => { const p = $("panel"); p.classList.toggle("min"); $("fold").textContent = p.classList.contains("min") ? "+" : "–"; };
+const stage = $("stage"), plate = $("plate"), ort = $("ort"), cut = $("cut");
+const IW = 3000, IH = 3053;
+let s = 1, tx = 0, ty = 0, base = 1;
+function fit() {
+  const W = stage.clientWidth, H = stage.clientHeight; base = Math.min(W / IW, H / IH) * .96;
+  s = base; tx = (W - IW * s) / 2; ty = (H - IH * s) / 2; apply();
+}
+function apply() {
+  plate.style.width = IW + "px"; plate.style.height = IH + "px";
+  plate.style.transform = `translate(${tx}px,${ty}px) scale(${s})`;
+  setSwipe(curX);
+}
+let curX = null;          // posición de la cortina en pantalla (px)
+function setSwipe(px) {
+  const W = stage.clientWidth; if (px === null) px = W / 2; curX = Math.max(0, Math.min(W, px));
+  const imgX = (curX - tx) / (s * IW) * 100;
+  ort.style.setProperty("--x", Math.max(0, Math.min(100, imgX)) + "%");
+  cut.style.setProperty("--sx", curX + "px");
+  $("sw").value = Math.round(curX / W * 100);
+}
+function zoomAt(f, cx, cy) {
+  const ns = Math.max(base * .8, Math.min(base * 14, s * f));
+  tx = cx - (cx - tx) * ns / s; ty = cy - (cy - ty) * ns / s; s = ns; apply();
+}
+const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
+let drag = null;
+stage.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, tx, ty }; stage.setPointerCapture(e.pointerId); stage.classList.add("drag"); });
+stage.addEventListener("pointermove", e => {
+  if (drag) { tx = drag.tx + e.clientX - drag.x; ty = drag.ty + e.clientY - drag.y; apply(); }
+  else if (fine) setSwipe(e.clientX);
+});
+const end = () => { drag = null; stage.classList.remove("drag"); };
+stage.addEventListener("pointerup", end); stage.addEventListener("pointercancel", end);
+stage.addEventListener("wheel", e => { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX, e.clientY); }, { passive: false });
+$("zin").onclick = () => zoomAt(1.4, stage.clientWidth / 2, stage.clientHeight / 2);
+$("zout").onclick = () => zoomAt(1 / 1.4, stage.clientWidth / 2, stage.clientHeight / 2);
+$("reset").onclick = () => { curX = null; fit(); };
+$("sw").oninput = e => setSwipe(e.target.value / 100 * stage.clientWidth);
+addEventListener("resize", fit); fit();
+addEventListener("keydown", e => { if (e.key === "Escape" && parent !== window) parent.postMessage("vivo:cerrar", location.origin); });
+</script>
+</body></html>
