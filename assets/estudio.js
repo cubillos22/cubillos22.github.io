@@ -46,7 +46,7 @@
     html.dataset.theme = on ? "light" : "dark";
     html.classList.toggle("lamp-on", on);
     pullBtns.forEach(b => b.setAttribute("aria-pressed", String(on)));
-    if (themeMeta) themeMeta.setAttribute("content", on ? "#FAFAF8" : "#121413");
+    if (themeMeta) themeMeta.setAttribute("content", on ? "#ffffff" : "#000000");
     if (o.save) store.set("light", on ? "1" : "0");
     if (o.flicker && !reduce) { html.classList.add("is-flicker"); setTimeout(() => html.classList.remove("is-flicker"), 480); }
   }
@@ -106,6 +106,15 @@
     row.addEventListener("pointerleave", () => peek.classList.remove("is-on"));
   });
 
+  // cinta que corre: su velocidad y su sentido siguen al scroll
+  const tracks = reduce ? [] : [...d.querySelectorAll(".track[data-ticker]")].map(el => ({ el, dir: +el.dataset.ticker || 1, x: 0 }));
+  // cajas rojas de las áreas: se inclinan con la velocidad del scroll y vuelven solas
+  const skews = new Set();
+  if (!reduce) {
+    const sio = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? skews.add(e.target) : (skews.delete(e.target), e.target.style.transform = "")));
+    d.querySelectorAll(".area-head h2, .head h2").forEach(el => sio.observe(el));
+  }
+  let lastSY = scrollY, sv = 0;
   let running = true;
   d.addEventListener("visibilitychange", () => { running = !d.hidden; if (running) requestAnimationFrame(frame); });
   function frame() {
@@ -128,6 +137,13 @@
       const vx = m.x - pp.x; pp.x = lerp(pp.x, m.x, .15); pp.y = lerp(pp.y, m.y, .15);
       peek.style.transform = `translate3d(${pp.x}px,${pp.y}px,0) rotate(${clamp(vx * .05, -6, 6).toFixed(2)}deg)`;
     } else if (peek) { pp.x = m.x; pp.y = m.y; }
+    const vy = scrollY - lastSY; lastSY = scrollY; sv = lerp(sv, clamp(vy, -80, 80), .12);
+    for (const t of tracks) {
+      const run = [...t.el.children].find(c => c.offsetParent !== null || c.getClientRects().length);
+      const w = run ? run.offsetWidth : 0;
+      if (w) { t.x -= (.7 + Math.abs(sv) * .5) * t.dir * (sv < -1 ? -1 : 1); t.x = ((t.x % w) - w) % w; t.el.style.transform = `translate3d(${t.x.toFixed(1)}px,0,0)`; }
+    }
+    if (skews.size) { const k = clamp(sv * .18, -9, 9).toFixed(2); for (const el of skews) el.style.transform = `skewX(${-k}deg)`; }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
