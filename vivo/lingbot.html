@@ -71,10 +71,12 @@ renderer.domElement.addEventListener("wheel", () => controls.autoRotate = false,
 
 async function getBin(url) {
   const r = await fetch(url); if (!r.ok) throw new Error(r.status);
+  // GitHub Pages lo sirve con gzip: content-length es el tamaño comprimido, solo sirve para estimar el avance
   const total = +r.headers.get("content-length") || 0;
   if (!r.body || !total) return new Uint8Array(await r.arrayBuffer());
-  const out = new Uint8Array(total); const rd = r.body.getReader(); let got = 0;
-  for (;;) { const { done, value } = await rd.read(); if (done) break; out.set(value, got); got += value.length; $("prog").style.width = (100 * got / total) + "%"; }
+  const parts = []; const rd = r.body.getReader(); let got = 0;
+  for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; $("prog").style.width = Math.min(100, 100 * got / total) + "%"; }
+  const out = new Uint8Array(got); let o = 0; for (const p of parts) { out.set(p, o); o += p.length; }
   return out;
 }
 let pts, colReal, colAlt, track, half, startPos, startTarget;
