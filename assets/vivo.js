@@ -34,6 +34,10 @@
   // limpieza síncrona: el evento "close" llega tarde (o no llega) en pestañas en segundo plano
   q(".lc").addEventListener("click", () => { dlg.close(); cleanup(); });
   dlg.addEventListener("cancel", cleanup);
+  // Esc dentro de los visores propios (mismo origen) también cierra la hoja
+  addEventListener("message", e => {
+    if (e.origin === location.origin && e.data === "vivo:cerrar" && dlg.open) { dlg.close(); cleanup(); }
+  });
   dlg.addEventListener("close", () => { if (!dlg.open) cleanup(); });
 
   const kindOf = url => url.includes("arcgis.esri.co") ? "demo" : /^vivo\//.test(url) ? "own" : "agol";

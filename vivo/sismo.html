@@ -64,7 +64,11 @@ function card(kicker, title, rows, url) {           // ventana emergente armada 
   const d = document.createElement("div");
   const k = document.createElement("p"); k.className = "k"; k.textContent = kicker; d.appendChild(k);
   const h = document.createElement("h3"); h.textContent = title; d.appendChild(h);
-  for (const [a, b] of rows) if (b !== null && b !== undefined && b !== "") { const p = document.createElement("div"); const s = document.createElement("b"); s.textContent = a + ": "; p.append(s, String(b)); d.appendChild(p); }
+  for (const [a, b] of rows) if (b !== null && b !== undefined && b !== "") {
+    const p = document.createElement("div");
+    if (a) { const s = document.createElement("b"); s.textContent = a + ": "; p.appendChild(s); }
+    p.append(String(b)); d.appendChild(p);
+  }
   if (url && /^https?:\/\//i.test(url)) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener nofollow"; a.textContent = T.src + " ↗"; a.style.display = "inline-block"; a.style.marginTop = "6px"; d.appendChild(a); }
   return d;
 }
@@ -97,4 +101,5 @@ const q = (l, f) => fetch(`${S}${l}/query?where=1%3D1&outFields=${f}&outSR=4326&
   } catch (e) { $("msg").textContent = T.fail; console.error(e); }
 })();
 </script>
+<script>addEventListener("keydown",e=>{if(e.key==="Escape"&&parent!==window)parent.postMessage("vivo:cerrar",location.origin)})</script>
 </body></html>

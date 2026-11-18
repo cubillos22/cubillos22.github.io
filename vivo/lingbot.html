@@ -150,4 +150,5 @@ function resize() { const w = stage.clientWidth, h = stage.clientHeight; rendere
 addEventListener("resize", resize); resize();
 renderer.setAnimationLoop(now => { if (flying) flyStep(now); else controls.update(); renderer.render(scene, camera); });
 </script>
+<script>addEventListener("keydown",e=>{if(e.key==="Escape"&&parent!==window)parent.postMessage("vivo:cerrar",location.origin)})</script>
 </body></html>
