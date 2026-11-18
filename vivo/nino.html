@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>El Niño a escala local · Miguel Cubillos</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="vivo.css?v=1">
+</head><body>
+<div id="map" aria-label="Mapa interactivo de Colombia y Ecuador"></div>
+<aside class="panel" id="panel">
+ <button class="btn fold" id="fold" type="button" aria-label="Plegar panel">–</button>
+ <p class="k" data-t="kicker">Caso 06 · Colombia y Ecuador · GIS Day 2026</p>
+ <h1 data-t="title">El Niño a escala local</h1>
+ <p data-t="lead">Cuatro capas del mismo análisis sobre un mapa real. Cambia de capa, baja la opacidad para ver qué hay debajo y acerca hasta tu municipio.</p>
+ <div class="row" role="group" aria-label="Capa" id="layers"></div>
+ <label class="sl"><span data-t="op">Opacidad</span><input id="op" type="range" min="0" max="1" step="0.05" value="0.85"></label>
+ <div id="legend"></div>
+ <div class="row"><button class="btn" id="st" type="button" aria-pressed="false" data-t="st">Estaciones (635)</button></div>
+ <p class="lim" data-t="lim">Validación del downscaling: R² 0,988 en Colombia (RMSE 0,75 °C) y 0,963 en Ecuador. La susceptibilidad tiene R² 0,14–0,31: sirve para priorizar, no para pronosticar.</p>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const EN = new URLSearchParams(location.search).get("lang") === "en";
+const L_ = {
+ temperatura: {es:"Temperatura", en:"Temperature",
+   d:{es:"Anomalía térmica de El Niño bajada a escala local con Forest. Más de ±1 °C se satura.", en:"El Niño temperature anomaly brought to local scale with Forest. Beyond ±1 °C it saturates."},
+   ramp:["#368AE6","#8EC5EA","#E9DCC2","#F6A156","#DC402D"], ticks:["−1 °C","0","+1 °C"]},
+ patrones: {es:"Patrones", en:"Patterns",
+   d:{es:"Patrones de eventos 2010–2026 por municipio y cantón (Emerging Hot Spot).", en:"Event patterns 2010–2026 by municipality and canton (Emerging Hot Spot)."},
+   cls:[["#B81E2B",{es:"Persistente o en aumento",en:"Persistent or intensifying"}],["#F28B3B",{es:"Consecutivo",en:"Consecutive"}],["#FFD073",{es:"Nuevo",en:"New"}],
+        ["#F7B7A3",{es:"Esporádico",en:"Sporadic"}],["#D83D30",{es:"Oscilante caliente",en:"Oscillating hot"}],["#368AE6",{es:"Oscilante frío",en:"Oscillating cold"}],["#D4CFC4",{es:"Sin patrón",en:"No pattern"}]]},
+ modelo: {es:"Susceptibilidad", en:"Susceptibility",
+   d:{es:"Valor predicho por el modelo Forest, en quintiles por país.", en:"Value predicted by the Forest model, in quintiles per country."},
+   ramp:["#FFF0AE","#FDD270","#FDA147","#EF6A32","#B81E2B"], ticks:[{es:"Muy baja",en:"Very low"},{es:"Muy alta",en:"Very high"}]},
+ relieve: {es:"Relieve", en:"Relief",
+   d:{es:"Elevación: el predictor que más pesa en el modelo.", en:"Elevation: the strongest predictor in the model."},
+   ramp:["#4F8F5A","#B9C77A","#E2D493","#B58357","#8F6447","#F6F3EE"], ticks:["0 m","2.600 m","5.200 m"]}
+};
+const T = EN ? {kicker:"Case 06 · Colombia and Ecuador · GIS Day 2026", title:"El Niño at local scale",
+  lead:"Four layers of the same analysis on a real map. Switch layers, lower the opacity to see what is below and zoom in to any municipality.",
+  op:"Opacity", st:"Stations (635)", lim:"Downscaling validation: R² 0.988 in Colombia (RMSE 0.75 °C) and 0.963 in Ecuador. Susceptibility has R² 0.14–0.31: useful to set priorities, not to forecast."} : {};
+if (EN) { document.documentElement.lang = "en"; document.title = "El Niño at local scale · Miguel Cubillos"; document.querySelectorAll("[data-t]").forEach(e => { if (T[e.dataset.t]) e.textContent = T[e.dataset.t]; }); }
+const tx = v => typeof v === "string" ? v : (EN ? v.en : v.es);
+const $ = id => document.getElementById(id);
+$("fold").onclick = () => { const p = $("panel"); p.classList.toggle("min"); $("fold").textContent = p.classList.contains("min") ? "+" : "–"; };
+
+const map = L.map("map", { zoomControl: false, minZoom: 4, maxZoom: 9 });
+L.control.zoom({ position: "topright" }).addTo(map);
+map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
+map.createPane("labels"); map.getPane("labels").style.zIndex = 450; map.getPane("labels").style.pointerEvents = "none";
+const BM = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/";
+L.tileLayer(BM + "World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { attribution: "Esri, HERE, Garmin, &copy; OpenStreetMap", maxNativeZoom: 16 }).addTo(map);
+L.tileLayer(BM + "World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { pane: "labels", maxNativeZoom: 16 }).addTo(map);
+const B = [[-5.60551, -81.52211], [13.26479, -66.74483]];
+map.fitBounds(B, { paddingTopLeft: innerWidth > 560 ? [340, 10] : [10, 10], paddingBottomRight: innerWidth > 560 ? [10, 10] : [10, innerHeight * 0.45] });
+const ov = {}; let cur;
+for (const k of Object.keys(L_)) ov[k] = L.imageOverlay(`data/nino-${k}.webp`, B, { opacity: 0.85, interactive: false });
+function show(k) {
+  if (!ov[k]) k = "temperatura";
+  if (cur) map.removeLayer(ov[cur]); cur = k; ov[k].setOpacity(+$("op").value).addTo(map);
+  document.querySelectorAll("#layers .btn").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === k));
+  const d = L_[k]; let h = `<p>${tx(d.d)}</p>`;
+  if (d.ramp) h += `<div class="ramp" style="background:linear-gradient(90deg,${d.ramp.join(",")})"></div><div class="ticks">${d.ticks.map(t => `<span>${tx(t)}</span>`).join("")}</div>`;
+  if (d.cls) h += `<ul class="legend">${d.cls.map(([c, n]) => `<li><span class="sw" style="background:${c}"></span>${tx(n)}</li>`).join("")}</ul>`;
+  $("legend").innerHTML = h;
+  history.replaceState(null, "", "#" + k);
+}
+for (const k of Object.keys(L_)) {
+  const b = document.createElement("button"); b.className = "btn"; b.type = "button"; b.dataset.k = k; b.textContent = tx(L_[k]);
+  b.onclick = () => show(k); $("layers").appendChild(b);
+}
+$("op").oninput = e => ov[cur].setOpacity(+e.target.value);
+let st;
+$("st").onclick = async () => {
+  const on = $("st").getAttribute("aria-pressed") !== "true"; $("st").setAttribute("aria-pressed", on);
+  if (!st) {
+    const g = await fetch("data/nino-estaciones.json").then(r => r.json());
+    st = L.geoJSON(g, { pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 3.5, weight: 1, color: "#FFF3D5", fillColor: "#A72838", fillOpacity: 1 })
+      .bindTooltip(`${EN ? "Station" : "Estación"} ${f.properties.c} · ${f.properties.p}`) });
+  }
+  on ? st.addTo(map) : map.removeLayer(st);
+};
+show(location.hash.slice(1));
+</script>
+</body></html>

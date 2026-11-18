@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sismo del 10-ago-2026 · base verificada · Miguel Cubillos</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="vivo.css?v=2">
+<style>.epi{width:30px;height:30px;border:2px solid #ff9d6c;border-radius:50%;box-shadow:0 0 0 6px rgba(255,157,108,.25),0 0 0 14px rgba(255,157,108,.1)}
+.epi::after{content:"";position:absolute;left:11px;top:11px;width:8px;height:8px;background:#ff9d6c;border-radius:50%}
+.sq{width:12px;height:12px;border:1.5px solid #0f2421;transform:rotate(45deg)}</style>
+</head><body>
+<div id="map" aria-label="Mapa interactivo del sismo"></div>
+<div class="status" id="status"><span id="msg">Leyendo el servicio público…</span></div>
+<aside class="panel" id="panel">
+ <button class="btn fold" id="fold" type="button" aria-label="Plegar panel">–</button>
+ <p class="k" data-t="kicker">Caso 05 · Iniciativa propia · ago 2026</p>
+ <h1 data-t="title">Sismo M7,4 del 10 de agosto</h1>
+ <p data-t="lead">Datos leídos en vivo del servicio público que armé: cada punto lleva al menos tres fuentes. Toca un punto para ver la fuente y su precisión.</p>
+ <ul class="legend" id="leg"></ul>
+ <p class="k" id="upd"></p>
+ <div class="row">
+  <a class="btn" target="_blank" rel="noopener" href="https://www.arcgis.com/apps/dashboards/812f54f09f904e7cbc4ff6dc10834805" data-t="dona">Tablero «Dónde donar» ↗</a>
+  <a class="btn" target="_blank" rel="noopener" href="https://experience.arcgis.com/experience/bb6d2620a9004a3ca3aa9ae4a8ee151b" data-t="con">Visor de conectividad ↗</a>
+ </div>
+ <p class="lim" data-t="lim">Las coordenadas salen de direcciones de prensa y cada punto dice su precisión. No reemplaza la evaluación oficial de daños.</p>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const EN = new URLSearchParams(location.search).get("lang") === "en";
+const S = "https://services.arcgis.com/vC1CdlKWEAtuT38d/arcgis/rest/services/Terremoto20260810_Datos/FeatureServer/";
+const AF = {"Colapso total":["#B81E2B","Colapso total","Total collapse"],"Colapso parcial":["#EF6A32","Colapso parcial","Partial collapse"],
+ "Danos graves":["#FDA147","Daños graves","Severe damage"],"Danos moderados":["#FFD073","Daños moderados","Moderate damage"],
+ "Atrapados":["#F7B7A3","Personas atrapadas","People trapped"],"Via bloqueada":["#8EC5EA","Vía bloqueada","Blocked road"],
+ "Infraestructura critica":["#C9B6F2","Infraestructura crítica","Critical infrastructure"]};
+const AC = {"PMU":["PMU","Command post"],"Albergue":["Albergue","Shelter"],"Hospital de campana":["Hospital de campaña","Field hospital"],
+ "Operativo busqueda y rescate":["Búsqueda y rescate","Search and rescue"],"Linea de atencion":["Línea de atención","Help line"],"Refuerzos en camino":["Refuerzos en camino","Reinforcements on the way"]};
+const PR = {"Direccion exacta":["Dirección exacta","Exact address"],"Aproximada (~100 m)":["Aproximada (~100 m)","Approximate (~100 m)"],
+ "Centroide de barrio":["Centroide de barrio","Neighbourhood centroid"],"Centroide urbano":["Centroide urbano","Town centroid"],"Tramo vial":["Tramo vial","Road segment"]};
+const NV = {"Critica":["#B81E2B","Crítica","Critical"],"Alta":["#EF6A32","Alta","High"],"Media":["#FDD270","Media","Medium"]};
+const T = EN ? {kicker:"Case 05 · Own initiative · Aug 2026", title:"M7.4 earthquake, 10 August",
+  lead:"Data read live from the public service I built: every point has at least three sources. Tap a point to see its source and precision.",
+  dona:"“Where to donate” dashboard ↗", con:"Connectivity viewer ↗", lim:"Coordinates come from press addresses and each point states its precision. It does not replace the official damage assessment.",
+  load:"Reading the public service…", fail:"The public service did not answer. Try again later.", src:"Source", prec:"Precision", trap:"People trapped", org:"Agencies",
+  zone:"Affected zone", n:"reports", epi:"Epicentre", depth:"depth", upd:d=>`Last edit in the service: ${d}`, rescue:"Response actions", zones:"Affected zones (level)"}
+ : {load:"Leyendo el servicio público…", fail:"El servicio público no respondió. Intenta más tarde.", src:"Fuente", prec:"Precisión", trap:"Personas atrapadas", org:"Organismos",
+  zone:"Zona afectada", n:"reportes", epi:"Epicentro", depth:"profundidad", upd:d=>`Última edición en el servicio: ${d}`, rescue:"Acciones de respuesta", zones:"Zonas afectadas (nivel)"};
+if (EN) { document.documentElement.lang = "en"; document.title = "M7.4 earthquake, 10 Aug 2026 · Miguel Cubillos"; document.querySelectorAll("[data-t]").forEach(e => { if (T[e.dataset.t]) e.textContent = T[e.dataset.t]; }); }
+const $ = id => document.getElementById(id); $("msg").textContent = T.load;
+const lab = (dict, v, i) => (dict[v] ? dict[v][EN ? i + 1 : i] : v) || "";
+$("fold").onclick = () => { const p = $("panel"); p.classList.toggle("min"); $("fold").textContent = p.classList.contains("min") ? "+" : "–"; };
+
+const map = L.map("map", { zoomControl: false, minZoom: 5, maxZoom: 18 });
+L.control.zoom({ position: "topright" }).addTo(map);
+map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
+map.createPane("labels"); map.getPane("labels").style.zIndex = 450; map.getPane("labels").style.pointerEvents = "none";
+const BM = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/";
+L.tileLayer(BM + "World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { attribution: "Esri, HERE, Garmin, &copy; OpenStreetMap", maxNativeZoom: 16 }).addTo(map);
+L.tileLayer(BM + "World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { pane: "labels", maxNativeZoom: 16 }).addTo(map);
+map.setView([4.6, -75.9], 7);
+
+function card(kicker, title, rows, url) {           // ventana emergente armada con textContent: los datos vienen de prensa
+  const d = document.createElement("div");
+  const k = document.createElement("p"); k.className = "k"; k.textContent = kicker; d.appendChild(k);
+  const h = document.createElement("h3"); h.textContent = title; d.appendChild(h);
+  for (const [a, b] of rows) if (b !== null && b !== undefined && b !== "") { const p = document.createElement("div"); const s = document.createElement("b"); s.textContent = a + ": "; p.append(s, String(b)); d.appendChild(p); }
+  if (url && /^https?:\/\//i.test(url)) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener nofollow"; a.textContent = T.src + " ↗"; a.style.display = "inline-block"; a.style.marginTop = "6px"; d.appendChild(a); }
+  return d;
+}
+const q = (l, f) => fetch(`${S}${l}/query?where=1%3D1&outFields=${f}&outSR=4326&f=geojson`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+(async () => {
+  try {
+    const [zon, af, ac, ep] = await Promise.all([
+      q(4, "CIUDAD,NIVEL,NUM_AFECTACIONES,ATRAPADOS_TOTAL"),
+      q(1, "CIUDAD,DEPARTAMENTO,SITIO,TIPO_AFECTACION,DESCRIPCION,PERSONAS_ATRAPADAS,PRECISION_GEO,FUENTE,URL_FUENTE,EditDate"),
+      q(2, "CIUDAD,SITIO,TIPO_ACCION,ORGANISMOS,PRECISION_GEO,FUENTE,URL_FUENTE"),
+      q(3, "EVENTO,MAGNITUD_MW,PROFUNDIDAD_KM,FECHA_HORA,FUENTE")]);
+    L.geoJSON(zon, { style: f => ({ color: (NV[f.properties.NIVEL] || ["#FDD270"])[0], weight: 1.2, fillOpacity: .18 }),
+      onEachFeature: (f, l) => l.bindPopup(card(T.zone, f.properties.CIUDAD, [[lab(NV, f.properties.NIVEL, 1), `${f.properties.NUM_AFECTACIONES} ${T.n}`], [T.trap, f.properties.ATRAPADOS_TOTAL]])) }).addTo(map);
+    const lay = L.geoJSON(af, { pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 7, weight: 1.5, color: "#0f2421", fillColor: (AF[f.properties.TIPO_AFECTACION] || ["#ccc"])[0], fillOpacity: 1 }),
+      onEachFeature: (f, l) => { const p = f.properties; l.bindPopup(card(`${lab(AF, p.TIPO_AFECTACION, 1)} · ${p.CIUDAD || ""}`, p.SITIO, [["", p.DESCRIPCION], [T.trap, p.PERSONAS_ATRAPADAS], [T.prec, lab(PR, p.PRECISION_GEO, 0)], [T.src, p.FUENTE]], p.URL_FUENTE)); } }).addTo(map);
+    L.geoJSON(ac, { pointToLayer: (f, ll) => L.marker(ll, { icon: L.divIcon({ className: "", html: '<div class="sq" style="background:#7FD1C1"></div>', iconSize: [12, 12] }) }),
+      onEachFeature: (f, l) => { const p = f.properties; l.bindPopup(card(`${lab(AC, p.TIPO_ACCION, 0)} · ${p.CIUDAD || ""}`, p.SITIO, [[T.org, p.ORGANISMOS], [T.prec, lab(PR, p.PRECISION_GEO, 0)], [T.src, p.FUENTE]], p.URL_FUENTE)); } }).addTo(map);
+    L.geoJSON(ep, { pointToLayer: (f, ll) => L.marker(ll, { icon: L.divIcon({ className: "", html: '<div class="epi"></div>', iconSize: [30, 30] }) }),
+      onEachFeature: (f, l) => { const p = f.properties; l.bindPopup(card(T.epi, `M${p.MAGNITUD_MW} · ${p.EVENTO}`, [["", p.FECHA_HORA], [T.depth, p.PROFUNDIDAD_KM + " km"], [T.src, p.FUENTE]])); } }).addTo(map);
+    const leg = $("leg"); const li = (sw, t) => { const e = document.createElement("li"); e.innerHTML = sw; e.append(t); leg.appendChild(e); };
+    const seen = new Set(af.features.map(f => f.properties.TIPO_AFECTACION));
+    for (const [k, v] of Object.entries(AF)) if (seen.has(k)) li(`<span class="sw dot" style="background:${v[0]}"></span>`, v[EN ? 2 : 1]);
+    li('<span class="sw" style="background:#7FD1C1;transform:rotate(45deg) scale(.8)"></span>', T.rescue || "Acciones de respuesta");
+    li('<span class="sw" style="background:rgba(184,30,43,.25);border-color:#B81E2B"></span>', T.zones);
+    li('<span class="sw dot" style="border:2px solid #ff9d6c;background:transparent"></span>', T.epi);
+    const last = Math.max(...af.features.map(f => f.properties.EditDate || 0));
+    if (last) $("upd").textContent = T.upd(new Date(last).toLocaleDateString(EN ? "en-GB" : "es-CO", { day: "numeric", month: "short", year: "numeric" }));
+    map.fitBounds(lay.getBounds().pad(0.15), { paddingTopLeft: innerWidth > 560 ? [340, 0] : [0, 0], paddingBottomRight: innerWidth > 560 ? [0, 0] : [0, innerHeight * 0.45], animate: false });
+    $("status").classList.add("hide");
+  } catch (e) { $("msg").textContent = T.fail; console.error(e); }
+})();
+</script>
+</body></html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nube 3D desde video de dron · Miguel Cubillos</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vivo.css?v=1">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head><body>
+<div id="stage" aria-label="Nube de puntos 3D navegable"></div>
+<div class="status" id="status"><div><span id="msg">Cargando la nube de puntos…</span><div class="bar"><i id="prog"></i></div></div></div>
+<aside class="panel" id="panel">
+ <button class="btn fold" id="fold" type="button" aria-label="Plegar panel">–</button>
+ <p class="k" data-t="kicker">Caso 04 · Proyecto propio · ago 2026</p>
+ <h1 data-t="title">Un video de dron convertido en nube 3D</h1>
+ <p data-t="lead">LingBot-Map reconstruyó esta nube a partir de 49 s de video 4K. Arrastra para girar, rueda o pellizca para acercar.</p>
+ <div class="row" role="group" aria-label="Color">
+  <button class="btn" id="cReal" type="button" aria-pressed="true" data-t="real">Color real</button>
+  <button class="btn" id="cAlt" type="button" aria-pressed="false" data-t="alt">Altura</button>
+ </div>
+ <div class="row">
+  <button class="btn" id="fly" type="button" aria-pressed="false" data-t="fly">▶ Seguir el vuelo</button>
+  <button class="btn" id="trk" type="button" aria-pressed="true" data-t="trk">Trayectoria</button>
+  <button class="btn" id="reset" type="button" data-t="reset">Vista inicial</button>
+ </div>
+ <label class="sl"><span data-t="size">Tamaño</span><input id="size" type="range" min="0.2" max="2.5" step="0.1" value="0.9"></label>
+ <ul class="legend">
+  <li><span class="sw" style="background:#ff9d6c"></span><span data-t="lgTrack">Trayectoria GPS del dron (SRT)</span></li>
+ </ul>
+ <p class="k" id="stats"></p>
+ <p class="lim" data-t="lim">Error de 3,71 m frente al GPS del dron, no contra puntos de control: sirve para contexto visual, no para medir.</p>
+</aside>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+const EN = new URLSearchParams(location.search).get("lang") === "en";
+const T = EN ? {kicker:"Case 04 · Own project · Aug 2026", title:"A drone video turned into a 3D point cloud",
+  lead:"LingBot-Map rebuilt this cloud from 49 s of 4K video. Drag to rotate, scroll or pinch to zoom.", real:"True color", alt:"Height",
+  fly:"▶ Follow the flight", stop:"■ Stop", trk:"Track", reset:"Start view", size:"Size", lgTrack:"Drone GPS track (SRT)",
+  lim:"3.71 m error against the drone GPS, not against control points: useful as visual context, not for measuring.",
+  load:"Loading the point cloud…", nogl:"This browser cannot show 3D (WebGL is off).", fail:"The cloud did not load. Try again later.",
+  stats:(n,o,w,h)=>`${n} of ${o} points shown · ${w} × ${h} m`}
+ : {kicker:"Caso 04 · Proyecto propio · ago 2026", title:"Un video de dron convertido en nube 3D",
+  lead:"LingBot-Map reconstruyó esta nube a partir de 49 s de video 4K. Arrastra para girar, rueda o pellizca para acercar.", real:"Color real", alt:"Altura",
+  fly:"▶ Seguir el vuelo", stop:"■ Detener", trk:"Trayectoria", reset:"Vista inicial", size:"Tamaño", lgTrack:"Trayectoria GPS del dron (SRT)",
+  lim:"Error de 3,71 m frente al GPS del dron, no contra puntos de control: sirve para contexto visual, no para medir.",
+  load:"Cargando la nube de puntos…", nogl:"Este navegador no puede mostrar 3D (WebGL apagado).", fail:"La nube no cargó. Intenta más tarde.",
+  stats:(n,o,w,h)=>`Se muestran ${n} de ${o} puntos · ${w} × ${h} m`};
+if (EN) { document.documentElement.lang = "en"; document.title = "3D cloud from a drone video · Miguel Cubillos"; }
+document.querySelectorAll("[data-t]").forEach(e => { if (T[e.dataset.t]) e.textContent = T[e.dataset.t]; });
+document.getElementById("msg").textContent = T.load;
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString(EN ? "en-US" : "es-CO");
+$("fold").onclick = () => { const p = $("panel"); p.classList.toggle("min"); $("fold").textContent = p.classList.contains("min") ? "+" : "–"; };
+
+const stage = $("stage");
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch (e) { $("msg").textContent = T.nogl; $("prog").parentNode.remove(); throw e; }
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x0b1b19);
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x0b1b19, 700, 1500);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.5, 5000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.maxPolarAngle = Math.PI * 0.495;
+controls.autoRotate = true; controls.autoRotateSpeed = 0.45;
+renderer.domElement.addEventListener("pointerdown", () => controls.autoRotate = false);
+renderer.domElement.addEventListener("wheel", () => controls.autoRotate = false, { passive: true });
+
+async function getBin(url) {
+  const r = await fetch(url); if (!r.ok) throw new Error(r.status);
+  const total = +r.headers.get("content-length") || 0;
+  if (!r.body || !total) return new Uint8Array(await r.arrayBuffer());
+  const out = new Uint8Array(total); const rd = r.body.getReader(); let got = 0;
+  for (;;) { const { done, value } = await rd.read(); if (done) break; out.set(value, got); got += value.length; $("prog").style.width = (100 * got / total) + "%"; }
+  return out;
+}
+let pts, colReal, colAlt, track, half, startPos, startTarget;
+try {
+  const [meta, bin] = await Promise.all([fetch("data/lingbot.json").then(r => r.json()), getBin("data/lingbot.bin")]);
+  const n = meta.count, [sx, sy, sz] = meta.span; half = [sx / 2, sy / 2];
+  const q = new Uint16Array(bin.buffer, 0, n * 3), c = new Uint8Array(bin.buffer, n * 6, n * 3);
+  const pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {               // x este, y norte, z altura -> three: x, z(arriba), -y
+    pos[3 * i] = q[3 * i] / 65535 * sx - half[0];
+    pos[3 * i + 1] = q[3 * i + 2] / 65535 * sz;
+    pos[3 * i + 2] = -(q[3 * i + 1] / 65535 * sy - half[1]);
+  }
+  colReal = new Float32Array(n * 3); for (let i = 0; i < n * 3; i++) colReal[i] = c[i] / 255;
+  const ramp = [[0.12, 0.31, 0.39], [0.31, 0.56, 0.35], [0.91, 0.86, 0.76], [0.96, 0.63, 0.34], [0.86, 0.25, 0.18]];
+  colAlt = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const t = Math.min(0.9999, pos[3 * i + 1] / sz) * (ramp.length - 1), k = Math.floor(t), f = t - k;
+    for (let j = 0; j < 3; j++) colAlt[3 * i + j] = ramp[k][j] + (ramp[k + 1][j] - ramp[k][j]) * f;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  g.setAttribute("color", new THREE.BufferAttribute(colReal, 3));
+  pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.9, vertexColors: true, sizeAttenuation: true }));
+  scene.add(pts);
+  const tp = meta.track.map(([x, y, z]) => new THREE.Vector3(x - half[0], z, -(y - half[1])));
+  if (tp.length > 1) {
+    track = new THREE.Group();
+    track.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(tp), new THREE.LineBasicMaterial({ color: 0xff9d6c })));
+    const drop = []; tp.forEach((p, i) => { if (i % 6 === 0) drop.push(p, new THREE.Vector3(p.x, 0, p.z)); });
+    track.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(drop), new THREE.LineBasicMaterial({ color: 0xff9d6c, transparent: true, opacity: 0.22 })));
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(3, 16, 12), new THREE.MeshBasicMaterial({ color: 0xff9d6c }));
+    dot.position.copy(tp[0]); track.add(dot); track.userData.pts = tp; track.userData.dot = dot;
+    scene.add(track);
+  }
+  startTarget = new THREE.Vector3(0, sz * 0.3, 0);
+  startPos = new THREE.Vector3(sx * 0.62, sx * 0.5, sy * 1.1);
+  camera.position.copy(startPos); controls.target.copy(startTarget);
+  $("stats").textContent = T.stats(fmt(n), fmt(meta.original), Math.round(sx), Math.round(sy));
+  $("status").classList.add("hide");
+} catch (e) { $("msg").textContent = T.fail; console.error(e); }
+
+function setColor(real) {
+  pts.geometry.attributes.color.array.set(real ? colReal : colAlt); pts.geometry.attributes.color.needsUpdate = true;
+  $("cReal").setAttribute("aria-pressed", real); $("cAlt").setAttribute("aria-pressed", !real);
+}
+$("cReal").onclick = () => setColor(true); $("cAlt").onclick = () => setColor(false);
+$("size").oninput = e => pts.material.size = +e.target.value;
+$("trk").onclick = () => { if (!track) return; track.visible = !track.visible; $("trk").setAttribute("aria-pressed", track.visible); };
+$("reset").onclick = () => { stopFly(); camera.position.copy(startPos); controls.target.copy(startTarget); };
+
+let flying = false, t0 = 0;
+const look = new THREE.Vector3();
+function stopFly() { flying = false; controls.enabled = true; if (track) track.userData.dot.visible = true; $("fly").setAttribute("aria-pressed", false); $("fly").textContent = T.fly; }
+$("fly").onclick = () => {
+  if (!track) return;
+  if (flying) return stopFly();
+  flying = true; t0 = performance.now(); controls.autoRotate = false; controls.enabled = false;
+  track.visible = true; $("trk").setAttribute("aria-pressed", true);
+  $("fly").setAttribute("aria-pressed", true); $("fly").textContent = T.stop;
+};
+const curve = () => track.userData.curve || (track.userData.curve = new THREE.CatmullRomCurve3(track.userData.pts));
+function flyStep(now) {
+  const dur = 26000, u = Math.min(1, (now - t0) / dur), cv = curve();
+  const p = cv.getPointAt(u), ahead = cv.getPointAt(Math.min(1, u + 0.04));
+  track.userData.dot.visible = false;
+  const out = p.clone().setY(0).normalize().multiplyScalar(60);   // un poco por fuera y por encima del dron
+  camera.position.set(p.x + out.x, p.y + 35, p.z + out.z);
+  look.set(ahead.x * 0.45, 6, ahead.z * 0.45); camera.lookAt(look);
+  if (u >= 1) { track.userData.dot.visible = true; track.userData.dot.position.copy(p); controls.target.copy(look); stopFly(); }
+}
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener("resize", resize); resize();
+renderer.setAnimationLoop(now => { if (flying) flyStep(now); else controls.update(); renderer.render(scene, camera); });
+</script>
+</body></html>

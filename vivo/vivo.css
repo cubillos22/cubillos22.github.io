@@ -1,0 +1,47 @@
+/* Visores en vivo: mismo lenguaje de hoja cartográfica que el sitio, siempre en tono noche. */
+:root{color-scheme:dark;--ink:#efe7d4;--paper:#0f2421;--paper-2:#132d29;--line:#2c4843;--terra:#ff9d6c;--hint:#a7bab1;
+--serif:"Newsreader",Georgia,serif;--sans:"Public Sans","Segoe UI",Arial,sans-serif;--mono:"IBM Plex Mono",Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font:400 15px/1.5 var(--sans);overflow:hidden}
+a{color:inherit;text-underline-offset:.2em}a:hover{color:var(--terra)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--terra);outline-offset:2px}
+#stage,#map{position:absolute;inset:0}
+.panel{position:absolute;top:14px;left:14px;width:min(320px,calc(100% - 28px));max-height:calc(100% - 28px);overflow:auto;
+ background:rgba(15,36,33,.9);border:1px solid var(--ink);padding:14px 16px;z-index:500;backdrop-filter:blur(4px)}
+.panel::after{content:"";position:absolute;inset:4px;border:1px solid var(--line);pointer-events:none}
+.k{font:.72rem/1.4 var(--mono);color:var(--hint);letter-spacing:.02em;margin:0}
+.panel h1{font:400 1.35rem/1.15 var(--serif);margin:4px 0 8px;letter-spacing:-.01em}
+.panel p{margin:0 0 10px;font-size:.86rem;color:var(--hint)}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.btn{background:transparent;border:1px solid var(--line);padding:5px 9px;font:.74rem var(--mono);cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+label.sl{display:flex;align-items:center;gap:8px;font:.72rem var(--mono);color:var(--hint);margin:8px 0}
+label.sl input{flex:1;accent-color:var(--terra)}
+.legend{margin:10px 0 4px;padding:0;list-style:none;font-size:.8rem}
+.legend li{display:flex;align-items:center;gap:8px;margin:3px 0}
+.sw{width:14px;height:14px;border:1px solid rgba(239,231,212,.5);flex:none}
+.sw.dot{border-radius:50%}
+.ramp{height:10px;border:1px solid rgba(239,231,212,.5);margin:6px 0 2px}
+.ticks{display:flex;justify-content:space-between;font:.68rem var(--mono);color:var(--hint)}
+.lim{font:italic .84rem/1.4 var(--serif)!important;color:var(--hint);border-top:1px solid var(--line);padding-top:8px;margin-top:10px!important}
+.status{position:absolute;inset:0;display:grid;place-items:center;z-index:400;font:.8rem var(--mono);color:var(--hint);pointer-events:none;text-align:center;padding:20px}
+.bar{width:180px;height:4px;border:1px solid var(--line);margin:10px auto 0}.bar i{display:block;height:100%;width:0;background:var(--terra)}
+.hide{display:none!important}
+.panel>.k:first-of-type{padding-right:34px}
+a.btn{text-decoration:none;display:inline-block}
+.fold{position:absolute;top:10px;right:10px;width:26px;height:26px;padding:0;line-height:1;z-index:2}
+.panel.min{width:auto}.panel.min>*:not(.fold):not(.k){display:none}.panel.min .k{padding-right:30px}
+.attr{position:absolute;right:8px;bottom:6px;font:.66rem var(--mono);color:var(--hint);z-index:500}
+/* Leaflet en tono noche */
+.leaflet-container{background:#0b1b19;font:inherit}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--paper);color:var(--ink);border:1px solid var(--ink);border-radius:0;box-shadow:none}
+.leaflet-popup-content{margin:12px 14px;font-size:.84rem;line-height:1.45}
+.leaflet-popup-content h3{font:400 1.05rem/1.2 var(--serif);margin:2px 0 6px}
+.leaflet-popup-content .k{margin-bottom:2px}
+.leaflet-container a.leaflet-popup-close-button{color:var(--hint)}
+.leaflet-bar a,.leaflet-bar a:hover{background:var(--paper);color:var(--ink);border-color:var(--line)}
+.leaflet-control-attribution{background:rgba(15,36,33,.8)!important;color:var(--hint)!important;font:.64rem var(--mono)}
+.leaflet-control-attribution a{color:var(--ink)!important}
+@media(max-width:560px){.panel{top:auto;bottom:10px;left:10px;width:calc(100% - 20px);max-height:46%}}
