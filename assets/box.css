@@ -472,3 +472,9 @@ html.live-open .float-cta{display:none}
 @media (max-width:900px){.offer-top{grid-template-columns:1fr}.offer-grid{grid-template-columns:1fr 1fr}.offer-grid li:nth-child(3n+2){transform:none}.offer-how{grid-template-columns:1fr}.offer-steps{grid-template-columns:1fr 1fr}}
 @media (max-width:640px){.offer-grid,.offer-steps{grid-template-columns:1fr}.offer-grid li{min-height:0}.float-cta{left:12px;right:12px;justify-content:center}}
 @media (prefers-reduced-motion:reduce){.float-cta{transition:none}.float-cta i{animation:none}}
+/* pieza destacada sin imagen (trabajo de grado) y bloque de formación */
+.piece.text.feature{grid-column:1/-1;border-top-color:var(--red)!important;border-top-width:8px}
+.piece.text.feature h3{font-size:clamp(1.8rem,1rem + 2vw,3.2rem);max-width:24ch}
+.piece.text.feature .sum{font-size:1.08rem;max-width:72ch}
+.form-h{margin:34px 0 8px;font:italic 900 1.6rem var(--display);text-transform:uppercase}
+.timeline.form span{color:var(--red)}
