@@ -272,7 +272,7 @@ html.live-open{overflow:hidden}
 }
 @media (max-width:640px){
  .top{gap:8px}.top nav{display:none}.lang-toggle{margin-left:auto}.brand{font-size:1.2rem}
- .lamp{width:96px;right:2vw}.lamp svg{width:96px}.lamp .cable{left:47px;height:calc(100% - 40px)}.lamp-pull{left:62px}
+ .lamp{width:96px;right:2vw}.lamp svg{width:96px}.lamp .cable{left:47px;height:calc(100% - 40px)}.lamp-pull{left:48px}
  .lamp-note{right:104px;width:9rem;font-size:.82rem}
  .spec{grid-template-columns:1fr}
  .car div,.timeline li{grid-template-columns:1fr;gap:2px}
