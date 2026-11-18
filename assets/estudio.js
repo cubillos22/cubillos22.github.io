@@ -31,7 +31,7 @@
     };
     if (o.save) store.set("lang", l);
     if (o.url !== false) { const u = new URL(location.href); l === "en" ? u.searchParams.set("lang", "en") : u.searchParams.delete("lang"); history.replaceState(null, "", u); }
-    if (o.animate && !reduce) { html.classList.add("is-switching"); setTimeout(() => { apply(); requestAnimationFrame(() => html.classList.remove("is-switching")); }, 200); }
+    if (o.animate && !reduce) { html.classList.add("is-switching"); setTimeout(() => { apply(); html.classList.remove("is-switching"); }, 200); }
     else apply();
   }
   const q = new URLSearchParams(location.search).get("lang");
@@ -44,6 +44,7 @@
   const pullBtns = d.querySelectorAll("[data-lamp]");
   function setLight(on, o = {}) {
     html.dataset.theme = on ? "light" : "dark";
+    const mapLight = d.querySelector(".hero-map .lit"); if (mapLight && on) mapLight.style.clipPath = "";
     html.classList.toggle("lamp-on", on);
     pullBtns.forEach(b => b.setAttribute("aria-pressed", String(on)));
     if (themeMeta) themeMeta.setAttribute("content", on ? "#ffffff" : "#000000");
@@ -96,8 +97,11 @@
   const layers = reduce ? [] : [...d.querySelectorAll("[data-depth]")];
   const lamp = d.querySelector(".lamp");
   const lit = d.querySelector(".hero-map .lit");
-  let litRect = null; const measure = () => { litRect = lit ? lit.getBoundingClientRect() : null; };
-  addEventListener("resize", measure); addEventListener("scroll", () => { litRect = null; }, { passive: true });
+  let litRect = null;
+  const measure = () => { const r = lit ? lit.parentElement.getBoundingClientRect() : null; litRect = r ? {left:r.left, top:r.top + scrollY, width:r.width, height:r.height} : null; };
+  addEventListener("resize", measure);
+  new ResizeObserver(measure).observe(d.querySelector(".hero"));
+  measure();
   const lp = { nx: 0, ny: 0, sway: 0, lx: 50, ly: 40 };
   const peek = d.querySelector(".peek"), peekImg = peek && peek.querySelector("img");
   const pp = { x: m.x, y: m.y };
@@ -107,16 +111,17 @@
   });
 
   // cinta que corre: su velocidad y su sentido siguen al scroll
-  const tracks = reduce ? [] : [...d.querySelectorAll(".track[data-ticker]")].map(el => ({ el, dir: +el.dataset.ticker || 1, x: 0 }));
-  // cajas rojas de las áreas: se inclinan con la velocidad del scroll y vuelven solas
-  const skews = new Set();
-  if (!reduce) {
-    const sio = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? skews.add(e.target) : (skews.delete(e.target), e.target.style.transform = "")));
-    d.querySelectorAll(".area-head h2, .head h2").forEach(el => sio.observe(el));
-  }
+  const tracks = reduce ? [] : [...d.querySelectorAll(".track[data-ticker]")].map(el => ({ el, dir: +el.dataset.ticker || 1, x: 0, width: 0 }));
+  const measureTracks = () => tracks.forEach(t => { const run = [...t.el.children].find(c => !c.lang || c.lang === html.dataset.lang); t.width = run ? run.offsetWidth : 0; });
+  const trackObserver = new ResizeObserver(measureTracks);
+  tracks.forEach(t => trackObserver.observe(t.el));
+  d.addEventListener("estudio:lang", () => { measureTracks(); measure(); });
+  d.fonts.ready.then(() => { measureTracks(); measure(); });
+  addEventListener("resize", measureTracks);
+  measureTracks();
   let lastSY = scrollY, sv = 0;
-  let running = true;
-  d.addEventListener("visibilitychange", () => { running = !d.hidden; if (running) requestAnimationFrame(frame); });
+  let running = true, frameId;
+  d.addEventListener("visibilitychange", () => { running = !d.hidden; cancelAnimationFrame(frameId); if (running) frameId = requestAnimationFrame(frame); });
   function frame() {
     if (!running) return;
     if (cur) {
@@ -128,8 +133,8 @@
     for (const el of layers) { const k = +el.dataset.depth; el.style.transform = `translate3d(${(lp.nx * k).toFixed(2)}px,${(lp.ny * k).toFixed(2)}px,0)`; }
     if (lamp && !reduce) { lp.sway = lerp(lp.sway, clamp(m.nx * 6, -5, 5), .045); lamp.style.transform = `rotate(${lp.sway.toFixed(2)}deg)`; }
     if (lit && !html.classList.contains("lamp-on")) {
-      if (!litRect) measure();
-      const tx = clamp((m.x - litRect.left) / litRect.width * 100, -20, 120), ty = clamp((m.y - litRect.top) / litRect.height * 100, -20, 120);
+      if (!litRect) return;
+      const tx = clamp((m.x - litRect.left) / litRect.width * 100, -20, 120), ty = clamp((m.y + scrollY - litRect.top) / litRect.height * 100, -20, 120);
       lp.lx = lerp(lp.lx, m.moved ? tx : 55, .12); lp.ly = lerp(lp.ly, m.moved ? ty : 42, .12);
       lit.style.setProperty("--lx", lp.lx.toFixed(1) + "%"); lit.style.setProperty("--ly", lp.ly.toFixed(1) + "%");
     }
@@ -139,14 +144,13 @@
     } else if (peek) { pp.x = m.x; pp.y = m.y; }
     const vy = scrollY - lastSY; lastSY = scrollY; sv = lerp(sv, clamp(vy, -80, 80), .12);
     for (const t of tracks) {
-      const run = [...t.el.children].find(c => c.offsetParent !== null || c.getClientRects().length);
-      const w = run ? run.offsetWidth : 0;
+      const w = t.width;
       if (w) { t.x -= (.7 + Math.abs(sv) * .5) * t.dir * (sv < -1 ? -1 : 1); t.x = ((t.x % w) - w) % w; t.el.style.transform = `translate3d(${t.x.toFixed(1)}px,0,0)`; }
     }
-    if (skews.size) { const k = clamp(sv * .18, -9, 9).toFixed(2); for (const el of skews) el.style.transform = `skewX(${-k}deg)`; }
-    requestAnimationFrame(frame);
+    updateScroll();
+    frameId = requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+  frameId = requestAnimationFrame(frame);
 
   /* ---------- inclinación de las piezas (medida al entrar) ---------- */
   if (fine && !reduce) d.querySelectorAll("[data-tilt]").forEach(el => {
@@ -200,16 +204,17 @@
 
   /* ---------- cabecera, progreso y área activa ---------- */
   const top = d.querySelector(".top"), prog = d.querySelector(".progress"); let lastY = scrollY, ticking = false;
-  addEventListener("scroll", () => {
-    if (ticking) return; ticking = true;
-    requestAnimationFrame(() => {
-      const y = scrollY;
-      top.classList.toggle("is-scrolled", y > 24);
-      top.classList.toggle("is-hidden", y > lastY && y > 500 && !d.querySelector("dialog[open]") && !top.contains(d.activeElement));
-      lastY = y; ticking = false;
-      if (prog) prog.style.transform = `scaleX(${clamp(y / (html.scrollHeight - innerHeight), 0, 1)})`;
-    });
-  }, { passive: true });
+  let scrollHeight = html.scrollHeight;
+  new ResizeObserver(() => { scrollHeight = html.scrollHeight; ticking = true; }).observe(d.body);
+  addEventListener("scroll", () => { ticking = true; }, { passive: true });
+  function updateScroll() {
+    if (!ticking) return;
+    const y = scrollY;
+    top.classList.toggle("is-scrolled", y > 24);
+    top.classList.toggle("is-hidden", y > lastY && y > 500 && !d.querySelector("dialog[open]") && !top.contains(d.activeElement));
+    lastY = y; ticking = false;
+    if (prog) prog.style.transform = `scaleX(${clamp(y / Math.max(1, scrollHeight - innerHeight), 0, 1)})`;
+  }
   const areaLinks = new Map([...d.querySelectorAll(".areas-nav a")].map(a => [a.getAttribute("href").slice(1), a]));
   if (areaLinks.size) {
     const aio = new IntersectionObserver(es => es.forEach(e => {
