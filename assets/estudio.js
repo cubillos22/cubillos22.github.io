@@ -222,5 +222,13 @@
     }), { rootMargin: "-40% 0px -55% 0px" });
     areaLinks.forEach((a, id) => { const s = d.getElementById(id); s && aio.observe(s); });
   }
+  /* ---------- llamado fijo: aparece al dejar la portada y se esconde sobre la oferta y el contacto ---------- */
+  const fcta = d.querySelector(".float-cta");
+  if (fcta) {
+    const seen = new Set();
+    const fio = new IntersectionObserver(es => { es.forEach(e => e.isIntersecting ? seen.add(e.target) : seen.delete(e.target)); upd(); }, { threshold: .15 });
+    ["#inicio", "#servicios", "#contacto"].forEach(s => { const el = d.querySelector(s); el && fio.observe(el); });
+    function upd() { fcta.classList.toggle("is-shown", seen.size === 0); }
+  }
   window.Estudio = { setLang, setLight };
 })();

@@ -429,3 +429,46 @@ html[data-theme=dark] .hero-map .lit{-webkit-mask:none;mask:none;clip-path:circl
 .area-folio{background:var(--red);color:#fff;font-style:italic;font-size:clamp(2.2rem,4.2vw,4.2rem);padding:.08em .2em .1em .12em;line-height:1}
 @media (max-width:640px){.hero-copy{padding-top:58px}}
 html{overflow-x:clip}
+
+/* ---------- sección estratégica: qué hago, qué ofrezco, escríbeme ---------- */
+.offer{background:var(--red);color:#fff;padding:clamp(70px,11vh,130px) 0 clamp(60px,9vh,110px);position:relative;overflow:hidden}
+.offer::selection,.offer ::selection{background:#000;color:#fff}
+.offer a{color:#fff}
+.offer-top{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(20px,4vw,60px);align-items:end}
+.offer h2{font:italic 900 clamp(3.4rem,1rem + 9vw,10rem)/.82 var(--display);letter-spacing:-.05em;text-transform:uppercase}
+.offer-what{font:700 clamp(1.3rem,1rem + 1.5vw,2.3rem)/1.18 var(--text);letter-spacing:-.01em;max-width:30ch}
+.offer-what b{background:#000;color:#fff;padding:0 .18em;font-weight:800}
+.offer-sub{margin:clamp(46px,8vh,80px) 0 18px;font:italic 900 clamp(1.8rem,1rem + 2.4vw,3.2rem)/1 var(--display);text-transform:uppercase;border-top:3px solid #fff;padding-top:16px}
+.offer-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.offer-grid li{background:#000;color:#fff;padding:22px 20px 20px;min-height:220px;display:flex;flex-direction:column;transition:transform .3s var(--out)}
+.offer-grid li:nth-child(3n+2){transform:translateY(14px)}
+.offer-grid h4{font:italic 800 clamp(1.3rem,1rem + .9vw,1.85rem)/1.02 var(--display);text-transform:uppercase;margin:0 0 12px}
+.offer-grid p{margin:0;font-size:.98rem;color:#e9e9e9}
+.offer-grid .out{margin-top:auto;padding-top:14px;font-weight:700;color:#fff;border-top:1px solid rgba(255,255,255,.25)}
+@media (hover:hover){.offer-grid li:hover{transform:translateY(-6px) rotate(-.6deg)}.offer-grid li:nth-child(3n+2):hover{transform:translateY(8px) rotate(.6deg)}}
+.offer-how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:clamp(40px,7vh,70px) 0 0;border-top:3px solid #fff}
+.offer-how div{padding:16px 18px 0 0}
+.offer-how dt{font:italic 900 1.5rem var(--display);text-transform:uppercase}
+.offer-how dd{margin:6px 0 0;font-size:1rem}
+.offer-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:28px}
+.offer-steps li{border:2px solid #fff;padding:16px}
+.offer-steps b{display:inline-grid;place-items:center;width:30px;height:30px;background:#fff;color:var(--red);font:italic 900 1rem var(--display)}
+.offer-steps h4{font:italic 800 1.15rem var(--display);text-transform:uppercase;margin:10px 0 6px}
+.offer-steps p{margin:0;font-size:.95rem}
+.offer-cta{margin-top:clamp(44px,8vh,80px);display:grid;gap:14px;justify-items:start}
+.cta-big{display:inline-block;background:#fff;color:var(--red)!important;font:italic 900 clamp(1.6rem,1rem + 3vw,4rem)/1 var(--display);letter-spacing:-.03em;text-transform:uppercase;padding:.28em .45em .32em;box-shadow:10px 10px 0 #000;transition:box-shadow .2s ease,transform .2s var(--out)}
+@media (hover:hover){.cta-big:hover{box-shadow:4px 4px 0 #000;transform:translate(6px,6px)}}
+.offer-cta p{margin:0;font-weight:600;font-size:1.02rem}
+.offer-cta p a{border-bottom:2px solid #fff}
+.offer-cta .note{font-weight:400;opacity:.9}
+.offer :focus-visible{outline-color:#fff}
+/* llamado fijo: no deja que la oferta pase desapercibida */
+.float-cta{position:fixed;right:clamp(12px,2vw,28px);bottom:clamp(12px,2vw,28px);z-index:45;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px;background:var(--red);color:#fff;
+ font:italic 900 1.15rem var(--display);text-transform:uppercase;box-shadow:6px 6px 0 var(--ink);transform:translateY(140%);transition:transform .45s var(--spring),box-shadow .2s ease}
+.float-cta i{width:9px;height:9px;background:#fff;animation:blink 1.6s steps(1) infinite}
+.float-cta.is-shown{transform:none}
+@media (hover:hover){.float-cta:hover{box-shadow:2px 2px 0 var(--ink)}}
+html.live-open .float-cta{display:none}
+@media (max-width:900px){.offer-top{grid-template-columns:1fr}.offer-grid{grid-template-columns:1fr 1fr}.offer-grid li:nth-child(3n+2){transform:none}.offer-how{grid-template-columns:1fr}.offer-steps{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.offer-grid,.offer-steps{grid-template-columns:1fr}.offer-grid li{min-height:0}.float-cta{left:12px;right:12px;justify-content:center}}
+@media (prefers-reduced-motion:reduce){.float-cta{transition:none}.float-cta i{animation:none}}
