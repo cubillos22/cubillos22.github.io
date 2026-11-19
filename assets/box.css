@@ -588,6 +588,37 @@ html[data-theme=dark] .area-list a::after,html[data-theme=dark] .area-folio{colo
 .head h2::before,.offer h2::before{content:"";display:block;width:32px;height:4px;background:var(--red);margin-bottom:22px}
 .hero-word{letter-spacing:-.045em}
 
+/* Formación y certificados */
+.edu-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;border-top:1px solid var(--line);padding-top:18px;margin-bottom:clamp(28px,5vh,48px)}
+.edu-stats b{display:block;font:700 clamp(30px,3.4vw,48px)/1 var(--display);letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.edu-stats>div>small{display:block;margin-top:6px;font:400 13px/1.4 var(--text);color:var(--muted)}
+.edu-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,64px);margin-bottom:clamp(28px,5vh,48px);align-items:start}
+.edu-h{margin:0;font:700 20px/1.2 var(--display);letter-spacing:-.02em}
+.edu-h:not(:first-child){margin-top:28px}
+.edu-sub{margin:4px 0 12px;font:400 13px var(--text);color:var(--muted)}
+.edu-list{list-style:none;margin:0;padding:0}
+.edu-list li{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-top:1px solid var(--soft);font:500 14px/1.35 var(--text)}
+.edu-list li>i{font-style:normal;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.edu-acc details,.crehana{border-top:1px solid var(--soft)}
+.edu-acc details:last-child{border-bottom:1px solid var(--soft)}
+.edu-acc summary,.crehana summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;font:600 15px var(--text)}
+.edu-acc summary::-webkit-details-marker,.crehana summary::-webkit-details-marker{display:none}
+.edu-acc summary>i,.crehana summary>i{font-style:normal;font:500 13px var(--text);color:var(--muted);display:flex;align-items:center;gap:10px}
+.edu-acc summary>i::after,.crehana summary>i::after{content:"+";font:400 18px/1 var(--text);color:var(--red);transition:transform .25s var(--out)}
+.edu-acc details[open] summary>i::after,.crehana[open] summary>i::after{transform:rotate(45deg)}
+.edu-acc summary:hover,.crehana summary:hover{color:var(--red)}
+.chips{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.chips li{font:400 13px/1.3 var(--text);padding:5px 10px;border:1px solid var(--soft);border-radius:999px}
+.edu-other{margin:12px 0 18px}
+.edu-other>div{padding:10px 0;border-top:1px solid var(--soft)}
+.edu-other dt{font:600 14px var(--text)}
+.edu-other dd{margin:4px 0 0;font:400 14px/1.5 var(--text);color:var(--muted)}
+.crehana{border-bottom:1px solid var(--soft)}
+.edu-lang{margin:8px 0 0;font:400 15px/1.55 var(--text)}
+.edu-talks{margin-top:12px}
+@media(max-width:900px){.edu-grid{grid-template-columns:minmax(0,1fr)}.edu-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.edu-list li{flex-direction:column;gap:2px}}
+
 /* Fuera del mapa: globo de viajes + tablero de Instagram */
 .trips{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(24px,4vw,64px);align-items:center;margin:8px 0 clamp(36px,6vh,64px)}
 .globe-col{max-width:520px;width:100%;justify-self:center}
