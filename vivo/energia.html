@@ -31,7 +31,7 @@ nav.idx a:hover,nav.idx a.on{color:#fff;border-color:var(--line)}
 .kick b{color:var(--terra);font-weight:600}
 h1{font:italic 800 clamp(2.2rem,6vw,4.6rem)/.98 var(--serif);text-transform:uppercase;margin:0 0 18px;letter-spacing:-.02em;max-width:15ch}
 .lead{font-size:1.12rem;color:#d6d6d6;max-width:62ch;margin:0 0 26px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);max-width:900px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);max-width:900px}
 .stats div{background:var(--paper);padding:14px 16px}.stats b{display:block;font:italic 800 1.8rem/1.1 var(--serif)}.stats span{font-size:.82rem;color:var(--hint)}
 .howto{margin-top:26px;font-size:.9rem;color:var(--hint);max-width:70ch}
 section.blk{padding:64px 0;border-bottom:1px solid var(--line)}
@@ -88,6 +88,7 @@ table{width:100%;border-collapse:collapse;font-size:.8rem}td,th{padding:4px 3px;
 footer{padding:40px 0 60px;color:var(--hint);font-size:.84rem}
 footer p{max-width:90ch}
 .leaflet-container{background:#111;font:inherit}
+.osm-dark{filter:invert(1) hue-rotate(180deg) grayscale(.85) brightness(.75) contrast(1.1)}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#000;color:#fff;border:1px solid #fff;border-radius:0}
 .leaflet-popup-content{font-size:.84rem;margin:10px 12px}.leaflet-popup-content h4{font:italic 800 1rem var(--serif);margin:0 0 4px;text-transform:uppercase}
 .leaflet-bar a,.leaflet-bar a:hover{background:#000;color:#fff;border-color:var(--line)}
@@ -111,7 +112,7 @@ footer p{max-width:90ch}
 <section class="hero"><div class="wrap">
  <p class="kick"><b>Energía e infraestructura</b> · aseguramiento de suministro · demo interactiva</p>
  <h1>De la fábrica a la torre, en un mapa</h1>
- <p class="lead">Las inspecciones en fábrica, los despachos y el estado de cada activo en obra suelen vivir en hojas sueltas y correos. Aquí están los tres en un solo lugar y conectados por la ubicación. Todo se puede tocar: mueva la fecha de corte, cambie la flecha del cable, registre una inspección.</p>
+ <p class="lead">Inspecciones en fábrica, despachos y estado de cada activo en obra, en un solo lugar y conectados por la ubicación: así se ve de un vistazo qué va a tiempo, dónde está cada cosa y qué hay que revisar en campo. Todo se puede tocar: mueva la fecha de corte, cambie la flecha del cable, registre una inspección.</p>
  <div class="stats" id="hstats"></div>
  <p class="howto">Cómo leerla: el bloque 1 sigue los paquetes de compra; el 2 es un corredor eléctrico real de 230 kV procesado desde LiDAR público; el 3 cierra el ciclo con un formulario de campo. Después vienen las aplicaciones de la geografía en la cadena de suministro, las mejoras posibles y cómo arrancar un piloto.</p>
 </div></section>
@@ -217,7 +218,7 @@ footer p{max-width:90ch}
 </main>
 
 <footer><div class="wrap">
- <p><b style="color:#fff">Fuentes y límites.</b> Nube LiDAR: USGS 3DEP, proyecto CO_ArapahoRooseveltPikeNF_D23, tesela 48404347 (dominio público). Eje de la línea: OpenStreetMap (© colaboradores, ODbL). Mapas base: Esri World Imagery y World Dark Gray, OpenStreetMap. El conductor está modelado (parábola entre estructuras, flecha paramétrica) porque la nube casi no registra los cables; las distancias son de ejemplo y no certifican cumplimiento normativo. Los datos de suministro, inspectores y estados de inspección son <b>ficticios</b>, creados para mostrar el flujo.</p>
+ <p><b style="color:#fff">Fuentes y límites.</b> Nube LiDAR: USGS 3DEP, proyecto CO_ArapahoRooseveltPikeNF_D23, tesela 48404347 (dominio público). Eje de la línea: OpenStreetMap (© colaboradores, ODbL). Mapas base: USGS The National Map (imagen aérea, dominio público) y OpenStreetMap. El conductor está modelado (parábola entre estructuras, flecha paramétrica) porque la nube casi no registra los cables; las distancias son de ejemplo y no certifican cumplimiento normativo. Los datos de suministro, inspectores y estados de inspección son <b>ficticios</b>, creados para mostrar el flujo.</p>
  <p>Miguel Cubillos · Ingeniero catastral y geodesta · Bogotá, Colombia</p>
 </div></footer>
 
@@ -229,7 +230,8 @@ const C = {ok:"#3fb27f", warn:"#f2b632", bad:"#ff5a4e", watch:"#5fb4ff", cab:"#3
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const DAY = 864e5, fmt = d => new Date(d).toISOString().slice(0, 10);
 const nf = (x, d = 1) => Number(x).toLocaleString("es-CO", {minimumFractionDigits: d, maximumFractionDigits: d});
-const BM = "https://server.arcgisonline.com/ArcGIS/rest/services/";
+const USGS = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}";
+const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
 fetch("data/energia.json").then(r => r.json()).then(D => { suministro(D); corredor(D); inspeccion(D); textos(D); })
  .catch(e => { document.querySelector(".hero .lead").insertAdjacentHTML("afterend", '<p style="color:#ff5a4e">No se pudieron cargar los datos. Recargue la página.</p>'); console.error(e); });
@@ -241,13 +243,14 @@ function suministro(D) {
   const fin = Math.max(...IT.map(i => +new Date(i.plan[H[H.length - 1]])));
   let corte = t1, filtro = "Todos", sel = null, extra = {};
   const m = L.map("m1", {worldCopyJump: true, scrollWheelZoom: false, zoomControl: true}).setView([20, -20], 2);
-  L.tileLayer(BM + "Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {attribution: "Esri, HERE, Garmin, © OpenStreetMap", maxNativeZoom: 16}).addTo(m);
-  const grp = L.featureGroup().addTo(m);
+  L.tileLayer(OSM, {attribution: "© colaboradores de OpenStreetMap", maxZoom: 19, className: "osm-dark"}).addTo(m);
+  const grp = L.featureGroup().addTo(m), lyF = L.layerGroup().addTo(m), lyI = L.layerGroup().addTo(m);
+  L.control.layers(null, {"Rutas de suministro": grp, "Fábricas": lyF, "Inspectores (ficticios)": lyI}, {collapsed: window.innerWidth < 700}).addTo(m);
   // inspectores ficticios para la asignación de FAT
   const INSP = [["Inspector 1 · Bogotá", 4.65, -74.08], ["Inspector 2 · Houston", 29.76, -95.37], ["Inspector 3 · Shanghái", 31.23, 121.47],
                 ["Inspector 4 · Bombay", 19.08, 72.88], ["Inspector 5 · Madrid", 40.42, -3.70], ["Inspector 6 · Ciudad de México", 19.43, -99.13]];
   const hav = (a, b, c, d) => { const r = Math.PI / 180, x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2; return 12742 * Math.asin(Math.sqrt(x)); };
-  INSP.forEach(([n, la, lo]) => L.circleMarker([la, lo], {radius: 4, color: "#fff", weight: 1, fillColor: "#fff", fillOpacity: .9}).addTo(m).bindTooltip(n + " (ficticio)"));
+  INSP.forEach(([n, la, lo]) => L.circleMarker([la, lo], {radius: 4, color: "#fff", weight: 1, fillColor: "#fff", fillOpacity: .9}).addTo(lyI).bindTooltip(n + " (ficticio)"));
 
   function estado(it) {                       // estado del paquete a la fecha de corte
     let ret = 0, hecho = 0;
@@ -273,13 +276,13 @@ function suministro(D) {
       <div style="grid-column:1/-1"><b style="color:${crit.length ? C.bad : C.ok}">${crit.length}</b><span>${crit.length ? "paquete(s) que llegarían a obra a menos de 7 días de la energización: " + crit.map(x => x.it.id).join(", ") : "ningún paquete amenaza la fecha de energización"}</span></div>`;
     $("flt").innerHTML = ["Todos", "A tiempo", "En riesgo", "Retrasado"].map(f => `<button type="button" class="chip" aria-pressed="${f === filtro}" data-f="${f}">${f}</button>`).join("");
     $("flt").querySelectorAll("button").forEach(b => b.onclick = () => { filtro = b.dataset.f; draw(); });
-    grp.clearLayers();
+    grp.clearLayers(); lyF.clearLayers();
     const vis = E.filter(x => filtro === "Todos" || x.e.st === filtro || (filtro === "A tiempo" && x.e.st === "Completado"));
     vis.forEach(({it, e}) => {
       const o = it.coords.origen, p = it.coords.puerto, b = it.coords.obra, c = col(e.st);
       const pl = L.polyline([[o[1], o[0]], [p[1], p[0]], [b[1], b[0]]], {color: c, weight: sel === it.id ? 4 : 2, opacity: sel && sel !== it.id ? .25 : .9}).addTo(grp);
       pl.on("click", () => { sel = it.id; draw(); });
-      L.circleMarker([o[1], o[0]], {radius: 6, color: "#000", weight: 1.5, fillColor: c, fillOpacity: 1}).addTo(grp)
+      L.circleMarker([o[1], o[0]], {radius: 6, color: "#000", weight: 1.5, fillColor: c, fillOpacity: 1}).addTo(lyF)
         .bindPopup(() => { const near = INSP.map(([nm, la, lo]) => [nm, hav(o[1], o[0], la, lo)]).sort((a, b) => a[1] - b[1]).slice(0, 2);
           return `<h4>${esc(it.origen)}</h4>${esc(it.id)} · ${esc(it.descripcion)}<br><b>Inspector FAT más cercano:</b><br>${near.map(([nm, d]) => `${esc(nm)} · ${nf(d, 0)} km (~${nf(d / 750 + 2, 0)} h de viaje)`).join("<br>")}<br><small style="color:#a3a3a3">Inspectores ficticios · distancia geodésica</small>`; });
     });
@@ -305,10 +308,10 @@ function corredor(D) {
   const A = D.afin, E = D.estructuras, V = D.veg, P = D.perfil;
   const ll = (s, t) => [A.lat0 + A.dlat_s * s + A.dlat_t * t, A.lon0 + A.dlon_s * s + A.dlon_t * t];
   const m = L.map("m2", {scrollWheelZoom: false, maxZoom: 19});
-  const sat = L.tileLayer(BM + "World_Imagery/MapServer/tile/{z}/{y}/{x}", {attribution: "Tiles © Esri — Esri, Maxar, Earthstar Geographics", maxNativeZoom: 18, maxZoom: 19}).addTo(m);
-  const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {attribution: "© OpenStreetMap", maxZoom: 19});
+  const sat = L.tileLayer(USGS, {attribution: "Imagen: USGS The National Map (dominio público)", maxNativeZoom: 16, maxZoom: 19}).addTo(m);
+  const osm = L.tileLayer(OSM, {attribution: "© colaboradores de OpenStreetMap", maxZoom: 19});
   const lyC = L.layerGroup().addTo(m), lyV = L.layerGroup().addTo(m), lyE = L.layerGroup().addTo(m);
-  L.control.layers({"Satélite": sat, "Calles": osm}, {"Conductor": lyC, "Vegetación bajo umbral": lyV, "Estructuras": lyE}, {collapsed: true}).addTo(m);
+  L.control.layers({"Imagen aérea (USGS)": sat, "Calles (OSM)": osm}, {"Conductor modelado": lyC, "Vegetación bajo el umbral": lyV, "Estructuras": lyE}, {collapsed: window.innerWidth < 700}).addTo(m);
   const BB = L.latLngBounds(E.map(e => [e.lat, e.lon])).pad(.12);
   m.fitBounds(BB); setTimeout(() => { m.invalidateSize(); m.fitBounds(BB); }, 300);
   const CAB = [[-.4, "h_fases"], [0, "h_fases"], [.4, "h_fases"], [-.3, "altura"], [.3, "altura"]];
