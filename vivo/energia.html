@@ -108,7 +108,7 @@ footer p{max-width:90ch}
 .v3p{position:absolute;top:10px;left:10px;width:min(300px,calc(100% - 20px));max-height:calc(100% - 20px);overflow:auto;background:rgba(0,0,0,.88);border:1px solid var(--line);padding:12px 14px;z-index:2}
 .v3p h3{font:italic 800 1rem var(--serif);text-transform:uppercase;margin:0 0 8px}
 .v3p .fold{position:absolute;top:8px;right:8px;width:26px;height:26px;padding:0;background:#000;border:1px solid var(--line);cursor:pointer}
-.v3p.min>*:not(.fold):not(h3){display:none}.v3p.min{width:auto;padding-right:44px}
+.v3p.min>*:not(.fold):not(h3){display:none!important}.v3p.min{width:auto;padding-right:44px}
 .cls{list-style:none;margin:6px 0 10px;padding:0;font-size:.8rem}.cls li{display:flex;align-items:center;gap:7px;margin:3px 0}
 .cls input{accent-color:var(--terra)}.cls i{width:12px;height:12px;display:inline-block;flex:none}.cls small{color:var(--hint);margin-left:auto}
 .ramp{height:9px;border:1px solid var(--line);margin:4px 0 2px}.ticks{display:flex;justify-content:space-between;font-size:.7rem;color:var(--hint)}
@@ -590,10 +590,15 @@ async function init() {
     $("v3s").oninput = e => { mat.size = +e.target.value; $("v3so").textContent = e.target.value + " px"; };
     $("v3e").oninput = e => { ex = +e.target.value; $("v3eo").textContent = "× " + e.target.value; place(); drawCab(); };
     $("v3so").textContent = "2 px"; $("v3eo").textContent = "× 1";
-    $("v3fold").onclick = () => { const p = $("v3p"); p.classList.toggle("min"); $("v3fold").textContent = p.classList.contains("min") ? "+" : "–"; };
+    $("v3fold").onclick = () => { const p = $("v3p"); p.classList.toggle("min"); $("v3fold").textContent = p.classList.contains("min") ? "+" : "–"; if (window.__v3size) window.__v3size(); };
     if (innerWidth < 700) $("v3fold").click();
     const [u, w] = M.eje, mid = new THREE.Vector3(0, (zmax - zmin) * .35, 0);
-    const home = () => { const d = 65535 * Math.max(sc[0], sc[1]) * .78; cam.position.set(mid.x + w[0] * d * .85 - u[0] * d * .35, mid.y + d * .42, mid.z - (w[1] * d * .85 - u[1] * d * .35)); ctl.target.copy(mid); ctl.update(); };
+    const VIEW = innerWidth < 700 ? {d: 1, lat: .3, back: .95, up: .85, ahead: 0} : {d: .8, lat: 1, back: -.15, up: .72, ahead: 0};    // vista oblicua desde un extremo del corredor
+    const home = () => { const V = VIEW, d = 65535 * Math.max(sc[0], sc[1]) * V.d, L = 65535 * Math.max(sc[0], sc[1]);
+      const tx = mid.x + u[0] * L * V.ahead, tz = mid.z - u[1] * L * V.ahead;
+      cam.position.set(tx + (w[0] * V.lat - u[0] * V.back) * d, mid.y + d * V.up, tz - (w[1] * V.lat - u[1] * V.back) * d);
+      ctl.target.set(tx, mid.y, tz); ctl.update(); };
+    window.__v3home = (o) => { Object.assign(VIEW, o || {}); home(); };
     $("v3home").onclick = home;
     $("v3rot").onclick = () => { ctl.autoRotate = !ctl.autoRotate; $("v3rot").setAttribute("aria-pressed", ctl.autoRotate); };
     const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
@@ -607,14 +612,16 @@ async function init() {
       const i = h.index, L = lab[i];
       pk.hidden = false; pk.innerHTML = `<b>${CL[L][0]}</b><br>Cota: ${(Z[i] + M.lo[2]).toFixed(1)} m · sobre el terreno: ${(hag[i] / 10).toFixed(1)} m<br>Intensidad relativa: ${Math.round(inten[i] / 2.55)} %${dv[i] < 255 ? `<br>Distancia al cable: <b style="color:${dv[i] < umbral * 10 ? "#ff2a1f" : "#3fb27f"}">${(dv[i] / 10).toFixed(1)} m</b>` : ""}<br><small style="color:#a3a3a3">E ${(X[i] + M.lo[0]).toFixed(1)} · N ${(Y[i] + M.lo[1]).toFixed(1)} (UTM 13N)</small>`;
     });
-    const size = () => { const w2 = box.clientWidth, h2 = box.clientHeight; ren.setSize(w2, h2, false); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); };
-    new ResizeObserver(size).observe(box); size();
+    const size = () => { const w2 = box.clientWidth, h2 = box.clientHeight; ren.setSize(w2, h2, false); cam.aspect = w2 / h2;
+      const pw = $("v3p").classList.contains("min") || w2 < 700 ? 0 : $("v3p").offsetWidth + 10;   // centra la escena en la zona que no tapa el panel
+      if (pw) cam.setViewOffset(w2, h2, -pw / 2, 0, w2, h2); else cam.clearViewOffset(); cam.updateProjectionMatrix(); };
+    new ResizeObserver(size).observe(box); size(); window.__v3size = size;
     place(); drawCab(); index(); paint(); home();
     let visible = true; new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(box);
     const v = new THREE.Vector3();
     ren.setAnimationLoop(() => { if (!visible) return; ctl.update(); ren.render(scene, cam);
       tops.forEach(({e, zt, t}) => { v.set(e.x - cx, (zt - zmin) * ex, -(e.y - cy)).project(cam); const ok = v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05;
-        t.style.display = ok ? "" : "none"; if (ok) { t.style.left = (v.x + 1) / 2 * box.clientWidth + "px"; t.style.top = (1 - v.y) / 2 * box.clientHeight + "px"; } }); });
+        t.style.display = ok ? "" : "none"; if (ok) { t.style.left = (v.x + 1) / 2 * box.clientWidth + (cam.view && cam.view.enabled ? -cam.view.offsetX : 0) + "px"; t.style.top = (1 - v.y) / 2 * box.clientHeight + "px"; } }); });
     window.__v3 = {n, LIM, ok: true};
     $("v3ld").remove();
   } catch (e) { console.error(e); $("v3msg").textContent = "No se pudo cargar la nube 3D (" + e.message + "). Recargue la página."; }
@@ -638,11 +645,11 @@ async function init() {
     return {v, y, RW};
   };
   function lineal(steps, id) {
-    const W = 148, G = 14, n = steps.length, Wt = n * W + (n - 1) * G, H = 250;
+    const W = 148, G = 14, n = steps.length, Wt = n * W + (n - 1) * G, H = 268;
     let h = `<svg class="hor" viewBox="0 0 ${Wt} ${H}" role="img" aria-label="Diagrama de flujo de captura">${arrowDef(id + "h")}`;
     steps.forEach(([t, g], i) => { const x = i * (W + G);
-      h += `<rect x="${x}" y="8" width="${W}" height="104" fill="#000" stroke="#fff" stroke-width="1.5"/>` + num(x, 8, i + 1) + tx(x + 10, 52, wrap(t, 17), 14, "#fff", 700, 1.25, J);
-      h += `<line x1="${x + W / 2}" y1="112" x2="${x + W / 2}" y2="128" stroke="${OK}" stroke-dasharray="3 3"/>` + tx(x + 4, 146, wrap(g, 24), 11.5, OK, 400, 1.35);
+      h += `<rect x="${x}" y="8" width="${W}" height="104" fill="#000" stroke="#fff" stroke-width="1.5"/>` + num(x, 8, i + 1) + tx(x + 10, 52, wrap(t, 15), 16, "#fff", 700, 1.2, J);
+      h += `<line x1="${x + W / 2}" y1="112" x2="${x + W / 2}" y2="128" stroke="${OK}" stroke-dasharray="3 3"/>` + tx(x + 4, 148, wrap(g, 20), 13.5, OK, 400, 1.3);
       if (i < n - 1) h += `<line x1="${x + W + 1}" y1="60" x2="${x + W + G - 1}" y2="60" stroke="${RED}" stroke-width="2" marker-end="url(#${id}h)"/>`; });
     const {v, y, RW} = vlist(steps, id, 0);
     return h + `</svg><svg class="vert" viewBox="0 0 ${RW + 2} ${y + 4}" role="img" aria-label="Diagrama de flujo de captura">${arrowDef(id + "v")}${v}</svg>`;
@@ -656,15 +663,15 @@ async function init() {
     const cl = wrap(centro, 14);
     h += `<circle cx="${cx}" cy="${cy}" r="92" fill="${RED}"/>` + `<text font-size="19" fill="#fff" font-weight="800" text-anchor="middle" ${J}>` + cl.map((l, i) => `<tspan x="${cx}" y="${cy - (cl.length - 1) * 11 + i * 22 + 6}">${esc(l)}</tspan>`).join("") + "</text>";
     steps.forEach(([t, g], i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n, x = cx + rx * Math.cos(a), y = cy + ry * Math.sin(a);
-      const tl = wrap(t, 22), gl = wrap(g, 30), hh = 22 + tl.length * 17 + gl.length * 14.5, X = Math.min(W - bw - 2, Math.max(2, x - bw / 2)), Y = Math.min(H - hh - 2, Math.max(2, y - hh / 2));
-      h += `<rect x="${X}" y="${Y}" width="${bw}" height="${hh}" fill="#000" stroke="#fff" stroke-width="1.5"/>` + num(X, Y, i + 1) + tx(X + 34, Y + 16, tl, 14, "#fff", 700, 1.2, J) + tx(X + 8, Y + 24 + tl.length * 17, gl, 11.5, OK, 400, 1.27); });
+      const tl = wrap(t, 22), gl = wrap(g, 28), hh = 22 + tl.length * 17 + gl.length * 16, X = Math.min(W - bw - 2, Math.max(2, x - bw / 2)), Y = Math.min(H - hh - 2, Math.max(2, y - hh / 2));
+      h += `<rect x="${X}" y="${Y}" width="${bw}" height="${hh}" fill="#000" stroke="#fff" stroke-width="1.5"/>` + num(X, Y, i + 1) + tx(X + 34, Y + 16, tl, 14, "#fff", 700, 1.2, J) + tx(X + 8, Y + 24 + tl.length * 17, gl, 12.5, OK, 400, 1.27); });
     let {v, y, RW} = vlist(steps, id, 20);
-    v = `<path d="M21,${y - 14} H6 V17 H19" fill="none" stroke="${RED}" stroke-width="2" marker-end="url(#${id}v)"/>` + v + tx(6, y + 18, ["Vuelve al paso 1 con el " + centro.toLowerCase() + "."], 12, MUT);
+    v = `<path d="M21,${y - 14} H6 V17 H19" fill="none" stroke="${RED}" stroke-width="2" marker-end="url(#${id}v)"/>` + v + tx(6, y + 18, ["Vuelve al paso 1 con el inventario SIG al día."], 12, MUT);
     return h + `</svg><svg class="vert" viewBox="0 0 ${RW + 2} ${y + 26}" role="img" aria-label="Ciclo de mantenimiento">${arrowDef(id + "v")}${v}</svg>`;
   }
   function etapas(cols, filas) {
     const n = cols.length, CW = 262, G = 12, LW = 112, W = LW + n * CW + (n - 1) * G;
-    const rowH = filas.map((_, r) => Math.max(...cols.map(c => wrap(c.v[r], 36).length)) * 15 + 20);
+    const rowH = filas.map((_, r) => Math.max(...cols.map(c => wrap(c.v[r], 33).length)) * 16.5 + 20);
     const top = 100, H = top + rowH.reduce((a, b) => a + b, 0) + 60;
     let h = `<svg class="hor" viewBox="0 0 ${W} ${H}" role="img" aria-label="Drones en el ciclo de vida del activo">${arrowDef("dgCh")}`;
     h += `<line x1="${LW}" y1="16" x2="${W - 4}" y2="16" stroke="${RED}" stroke-width="2" marker-end="url(#dgCh)"/>` + tx(LW, 10, [""], 1, "#000");
@@ -672,9 +679,9 @@ async function init() {
       h += `<rect x="${x}" y="30" width="${CW}" height="52" fill="${RED}"/>` + tx(x + 10, 62, wrap(c.t, 30), 17, "#fff", 800, 1.15, J); });
     let y = top;
     filas.forEach((f, r) => { h += tx(0, y + 12, wrap(f, 14), 12, MUT, 600, 1.25);
-      cols.forEach((c, i) => { const x = LW + i * (CW + G); h += `<rect x="${x}" y="${y - 6}" width="${CW}" height="${rowH[r] - 4}" fill="#000" stroke="#2f2f2f"/>` + tx(x + 10, y + 12, wrap(c.v[r], 36), 12, "#fff", 400, 1.25); });
+      cols.forEach((c, i) => { const x = LW + i * (CW + G); h += `<rect x="${x}" y="${y - 6}" width="${CW}" height="${rowH[r] - 4}" fill="#000" stroke="#2f2f2f"/>` + tx(x + 10, y + 13, wrap(c.v[r], 33), 13, "#fff", 400, 1.25); });
       y += rowH[r]; });
-    cols.forEach((c, i) => { const x = LW + i * (CW + G); h += tx(x + 4, y + 14, wrap("→ " + c.g, 38), 12, OK, 400, 1.3); });
+    cols.forEach((c, i) => { const x = LW + i * (CW + G); h += tx(x + 4, y + 14, wrap("→ " + c.g, 34), 13, OK, 400, 1.3); });
     const RW = 340; let yy = 4, v = "";
     cols.forEach(c => { const lines = filas.map((f, r) => [f, wrap(c.v[r], 40)]), gl = wrap("→ " + c.g, 42);
       const hh = 46 + lines.reduce((a, [, l]) => a + 18 + l.length * 15, 0) + gl.length * 15 + 6;
