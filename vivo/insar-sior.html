@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InSAR para Síor Consulting · Miguel Cubillos</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400..900;1,400..900&family=Archivo:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="vivo.css?v=4">
+<style>
+.leaflet-pane.leaflet-tile-pane .base{filter:saturate(.25) brightness(.62)}
+.sites{display:grid;grid-template-columns:1fr;gap:4px;margin:10px 0}
+.sites .btn{text-align:left;font:600 .86rem/1.25 var(--sans);text-transform:none;padding:7px 10px;display:flex;justify-content:space-between;gap:10px}
+.sites .btn small{font:500 .74rem var(--sans);color:var(--hint);white-space:nowrap}
+.sites .btn[aria-pressed=true] small{color:#fff}
+.note{font-size:.8rem!important}
+</style>
+</head><body>
+<div id="map" aria-label="Mapa interactivo de desplazamiento del terreno medido con radar"></div>
+<aside class="panel" id="panel">
+ <button class="btn fold" id="fold" type="button" aria-label="Plegar panel">–</button>
+ <p class="k" data-t="kicker">Síor Consulting · Sentinel-1 · 2018–2023</p>
+ <h1 data-t="title">Radar que mide cómo se mueve el suelo</h1>
+ <p data-t="lead">Los mapas de interferometría (InSAR) que hice para Síor, leídos en vivo desde sus capas públicas. Elige un lugar, baja la opacidad para ver qué hay debajo y acerca.</p>
+ <div class="sites" role="group" aria-label="Lugar" id="sites"></div>
+ <label class="sl"><span data-t="op">Opacidad</span><input id="op" type="range" min="0" max="1" step="0.05" value="0.9"></label>
+ <div id="legend"></div>
+ <p class="lim" data-t="lim">Las capas originales no traen leyenda ni unidades publicadas: la escala de color es relativa dentro de cada mapa. Están en la cuenta de la empresa, por eso no llevan mi nombre.</p>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const EN = new URLSearchParams(location.search).get("lang") === "en";
+const SVC = "https://tiles-eu1.arcgis.com/CDklpyXdJGpZQa2b/arcgis/rest/services/";
+const FR = {es:"Interferograma: cada vuelta completa de color equivale a unos 2,8 cm de movimiento hacia o desde el satélite. Donde las franjas se aprietan, el suelo se movió más.",
+            en:"Interferogram: each full cycle of colour is about 2.8 cm of movement towards or away from the satellite. Where the fringes get tight, the ground moved more."};
+const DS = {es:"Desplazamiento: de verde (poco) a amarillo y rojo (más), en la escala de la capa original.",
+            en:"Displacement: from green (little) to yellow and red (more), on the scale of the original layer."};
+const RAMP_D = ["#2f8f1f", "#8fc31f", "#e0e020", "#f0a020", "#d83020"];
+const RAMP_F = ["#3a0ca3", "#7209b7", "#c0306a", "#f08a24", "#f5d742", "#7209b7", "#3a0ca3"];
+const SITES = {
+ "marruecos-franjas": {svc:"Deformation_seismic_Morroco_09092023", z:9, b:[[30.106,-9.117],[31.930,-6.435]],
+   n:{es:"Marruecos · sismo", en:"Morocco · earthquake"}, s:{es:"interferograma", en:"interferogram"}, f:true,
+   d:{es:"Sismo del Alto Atlas, septiembre de 2023.", en:"High Atlas earthquake, September 2023."}},
+ "marruecos": {svc:"Earthquake_displacement_Morocco_09092023", z:9, b:[[30.106,-9.117],[31.930,-6.435]],
+   n:{es:"Marruecos · sismo", en:"Morocco · earthquake"}, s:{es:"desplazamiento", en:"displacement"},
+   d:{es:"El mismo sismo, ya convertido a desplazamiento: la mancha roja marca la zona que más se movió.", en:"The same earthquake, turned into displacement: the red patch marks the area that moved most."}},
+ "savaii": {svc:"Savaii_InSAR_Displacement_02022018_to_14022018_v1", z:10, b:[[-13.859,-172.845],[-13.319,-172.152]],
+   n:{es:"Samoa · Savai'i", en:"Samoa · Savai'i"}, s:{es:"feb 2018", en:"Feb 2018"},
+   d:{es:"Isla de Savai'i, entre el 2 y el 14 de febrero de 2018.", en:"Savai'i island, between 2 and 14 February 2018."}},
+ "upolu": {svc:"Upolu_InSAR_Displacement_02022018_to_14022018", z:10, b:[[-14.385,-172.340],[-13.567,-171.289]],
+   n:{es:"Samoa · Upolu", en:"Samoa · Upolu"}, s:{es:"feb 2018", en:"Feb 2018"},
+   d:{es:"Isla de Upolu, en las mismas fechas.", en:"Upolu island, on the same dates."}},
+ "jamaica": {svc:"Jamaica_InSAR_displacement_01012023_06182023", z:8, b:[[16.850,-78.516],[18.865,-75.876]],
+   n:{es:"Jamaica", en:"Jamaica"}, s:{es:"ene–jun 2023", en:"Jan–Jun 2023"},
+   d:{es:"Toda la isla, de enero a junio de 2023.", en:"The whole island, from January to June 2023."}},
+ "irlanda": {svc:"InSAR_displacement_Ireland_20032020_to_26032020", z:7, b:[[52.598,-8.354],[54.418,-4.223]],
+   n:{es:"Irlanda", en:"Ireland"}, s:{es:"mar 2020", en:"Mar 2020"},
+   d:{es:"Este de Irlanda, del 20 al 26 de marzo de 2020.", en:"East of Ireland, from 20 to 26 March 2020."}},
+ "australia": {svc:"InSAR_Displacement_WA_14082018_to_06032019", z:8, b:[[-33.637,114.593],[-31.436,117.948]],
+   n:{es:"Australia Occidental", en:"Western Australia"}, s:{es:"2018–2019", en:"2018–2019"},
+   d:{es:"Región de Perth, de agosto de 2018 a marzo de 2019. Un recorte de esta capa se entregó para un estudio hidrogeológico.", en:"Perth region, from August 2018 to March 2019. A clip of this layer went into a hydrogeology study."}}
+};
+const T = EN ? {kicker:"Síor Consulting · Sentinel-1 · 2018–2023", title:"Radar that measures how the ground moves",
+  lead:"The interferometry (InSAR) maps I made for Síor, read live from its public layers. Pick a place, lower the opacity to see what is below and zoom in.",
+  op:"Opacity", lim:"The original layers have no published legend or units: the colour scale is relative inside each map. They are in the company account, so they do not carry my name."} : {};
+if (EN) { document.documentElement.lang = "en"; document.title = "InSAR for Síor Consulting · Miguel Cubillos"; document.querySelectorAll("[data-t]").forEach(e => { if (T[e.dataset.t]) e.textContent = T[e.dataset.t]; }); }
+const tx = v => typeof v === "string" ? v : (EN ? v.en : v.es);
+const $ = id => document.getElementById(id);
+$("fold").onclick = () => { const p = $("panel"); p.classList.toggle("min"); $("fold").textContent = p.classList.contains("min") ? "+" : "–"; };
+
+const map = L.map("map", { zoomControl: false, minZoom: 3, maxZoom: 15, worldCopyJump: true });
+L.control.zoom({ position: "topright" }).addTo(map);
+map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  { attribution: "Esri, Maxar, Earthstar Geographics · InSAR: Síor Consulting", maxNativeZoom: 17, className: "base" }).addTo(map);
+map.createPane("labels"); map.getPane("labels").style.zIndex = 450; map.getPane("labels").style.pointerEvents = "none";
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", { pane: "labels", maxNativeZoom: 13, opacity: .8 }).addTo(map);
+
+const pad = () => innerWidth > 640 ? { paddingTopLeft: [350, 20], paddingBottomRight: [20, 20] } : { paddingTopLeft: [10, 10], paddingBottomRight: [10, innerHeight * 0.5] };
+const lay = {}; let cur;
+function show(k, fly) {
+  if (!SITES[k]) k = "marruecos-franjas";
+  const s = SITES[k];
+  if (cur) map.removeLayer(lay[cur]);
+  lay[k] = lay[k] || L.tileLayer(SVC + s.svc + "/MapServer/tile/{z}/{y}/{x}", { opacity: +$("op").value, maxNativeZoom: 16, bounds: s.b, errorTileUrl: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" });
+  cur = k; lay[k].setOpacity(+$("op").value).addTo(map);
+  fly === false ? map.fitBounds(s.b, pad()) : map.flyToBounds(s.b, { ...pad(), duration: 1.1 });
+  document.querySelectorAll("#sites .btn").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === k));
+  const r = s.f ? RAMP_F : RAMP_D;
+  $("legend").innerHTML = `<p>${tx(s.d)}</p><div class="ramp" style="background:linear-gradient(90deg,${r.join(",")})"></div>` +
+    (s.f ? "" : `<div class="ticks"><span>${EN ? "less" : "menos"}</span><span>${EN ? "more" : "más"}</span></div>`) + `<p class="note">${tx(s.f ? FR : DS)}</p>`;
+  history.replaceState(null, "", "#" + k);
+}
+for (const k of Object.keys(SITES)) {
+  const b = document.createElement("button"); b.className = "btn"; b.type = "button"; b.dataset.k = k;
+  b.innerHTML = `<span>${tx(SITES[k].n)}</span><small>${tx(SITES[k].s)}</small>`;
+  b.onclick = () => show(k); $("sites").appendChild(b);
+}
+$("op").oninput = e => lay[cur] && lay[cur].setOpacity(+e.target.value);
+show(location.hash.slice(1), false);
+</script>
+<script>addEventListener("keydown",e=>{if(e.key==="Escape"&&parent!==window)parent.postMessage("vivo:cerrar",location.origin)})</script>
+</body></html>

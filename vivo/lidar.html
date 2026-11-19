@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Qué parte de la nube es terreno · Miguel Cubillos</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400..900;1,400..900&family=Archivo:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vivo.css?v=4">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head><body>
+<div id="stage" aria-label="Nube de puntos LiDAR en 3D, clasificada en terreno y no terreno"></div>
+<div class="status" id="status"><div><span id="msg">Cargando la nube de puntos…</span><div class="bar"><i id="prog"></i></div></div></div>
+<aside class="panel" id="panel">
+ <button class="btn fold" id="fold" type="button" aria-label="Plegar panel">–</button>
+ <p class="k" data-t="kicker">Laboratorio de clase · LiDAR de dron</p>
+ <h1 data-t="title">Qué parte de la nube es terreno</h1>
+ <p data-t="lead">Una nube LiDAR de 25,4 millones de puntos, clasificada en terreno y lo demás. Deja solo el terreno para ver qué queda debajo de árboles y edificios. Arrastra para girar.</p>
+ <div class="row" role="group" aria-label="Qué mostrar" id="show">
+  <button class="btn" type="button" data-v="all" aria-pressed="true" data-t="all">Todo</button>
+  <button class="btn" type="button" data-v="ground" aria-pressed="false" data-t="ground">Solo terreno</button>
+  <button class="btn" type="button" data-v="rest" aria-pressed="false" data-t="rest">Sin terreno</button>
+ </div>
+ <div class="row" role="group" aria-label="Color">
+  <button class="btn" id="cReal" type="button" aria-pressed="false" data-t="real">Color real</button>
+  <button class="btn" id="cCls" type="button" aria-pressed="true" data-t="cls">Por clase</button>
+  <button class="btn" id="reset" type="button" data-t="reset">Vista inicial</button>
+ </div>
+ <ul class="legend" id="lg">
+  <li><span class="sw" style="background:#f2f2f2"></span><span data-t="lgG">Terreno (clase 2)</span></li>
+  <li><span class="sw" style="background:#e2231a"></span><span data-t="lgR">Lo demás: vegetación, edificios, objetos</span></li>
+ </ul>
+ <label class="sl"><span data-t="size">Tamaño</span><input id="size" type="range" min="0.3" max="3" step="0.1" value="1.1"></label>
+ <p class="k" id="stats"></p>
+ <p class="lim" data-t="lim">No capturé los datos ni hice la clasificación original: los usé en clase para comparar modelos de terreno y de superficie. Coordenadas relativas, sin ubicación.</p>
+</aside>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+const EN = new URLSearchParams(location.search).get("lang") === "en";
+const SHOT = new URLSearchParams(location.search).has("shot");   // captura limpia para la tarjeta
+const T = EN ? {kicker:"Class lab · drone LiDAR", title:"Which part of the cloud is ground?",
+  lead:"A LiDAR cloud of 25.4 million points, classified into ground and everything else. Keep only the ground to see what is left under trees and buildings. Drag to rotate.",
+  all:"All", ground:"Ground only", rest:"No ground", real:"True colour", cls:"By class", reset:"Start view", size:"Size",
+  lgG:"Ground (class 2)", lgR:"Everything else: vegetation, buildings, objects",
+  lim:"I did not capture the data or do the original classification: I used it in class to compare terrain and surface models. Relative coordinates, no location.",
+  load:"Loading the point cloud…", nogl:"This browser cannot show 3D (WebGL is off).", fail:"The cloud did not load. Try again later.",
+  stats:(n,o,w,h,g)=>`${n} of ${o} points shown · ${w} × ${h} m · ${g} % is ground`}
+ : {load:"Cargando la nube de puntos…", nogl:"Este navegador no puede mostrar 3D (WebGL apagado).", fail:"La nube no cargó. Intenta más tarde.",
+  stats:(n,o,w,h,g)=>`Se muestran ${n} de ${o} puntos · ${w} × ${h} m · ${g} % es terreno`};
+if (EN) { document.documentElement.lang = "en"; document.title = "Which part of the cloud is ground? · Miguel Cubillos";
+  document.querySelectorAll("[data-t]").forEach(e => { if (T[e.dataset.t]) e.textContent = T[e.dataset.t]; }); }
+const $ = id => document.getElementById(id);
+$("msg").textContent = T.load;
+const fmt = n => n.toLocaleString(EN ? "en-US" : "es-CO");
+$("fold").onclick = () => { const p = $("panel"); p.classList.toggle("min"); $("fold").textContent = p.classList.contains("min") ? "+" : "–"; };
+
+const stage = $("stage");
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch (e) { $("msg").textContent = T.nogl; $("prog").parentNode.remove(); throw e; }
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x000000);
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x000000, 700, 1600);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.5, 4000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.maxPolarAngle = Math.PI * 0.495;
+controls.autoRotate = true; controls.autoRotateSpeed = 0.5;
+renderer.domElement.addEventListener("pointerdown", () => controls.autoRotate = false);
+renderer.domElement.addEventListener("wheel", () => controls.autoRotate = false, { passive: true });
+
+async function getBin(url) {
+  const r = await fetch(url); if (!r.ok) throw new Error(r.status);
+  const total = +r.headers.get("content-length") || 0;          // con gzip es el tamaño comprimido: solo estima el avance
+  if (!r.body || !total) return new Uint8Array(await r.arrayBuffer());
+  const parts = []; const rd = r.body.getReader(); let got = 0;
+  for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; $("prog").style.width = Math.min(100, 100 * got / total) + "%"; }
+  const out = new Uint8Array(got); let o = 0; for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+}
+let pts, colReal, colCls, nG = 0, n = 0, startPos, startTarget;
+try {
+  const [meta, bin] = await Promise.all([fetch("data/lidar.json").then(r => r.json()), getBin("data/lidar.bin")]);
+  n = meta.count; const [sx, sy, sz] = meta.span;
+  const q = new Uint16Array(bin.buffer, 0, n * 3), c = new Uint8Array(bin.buffer, n * 6, n * 3), k = new Uint8Array(bin.buffer, n * 9, n);
+  // terreno primero, así «solo terreno» y «sin terreno» son rangos de dibujo
+  const order = new Uint32Array(n); let a = 0, b = n - 1;
+  for (let i = 0; i < n; i++) k[i] ? order[a++] = i : order[b--] = i;
+  nG = a;
+  const pos = new Float32Array(n * 3); colReal = new Float32Array(n * 3); colCls = new Float32Array(n * 3);
+  for (let j = 0; j < n; j++) {
+    const i = order[j];
+    pos[3 * j] = q[3 * i] / 65535 * sx - sx / 2;
+    pos[3 * j + 1] = q[3 * i + 2] / 65535 * sz * 1.2;
+    pos[3 * j + 2] = -(q[3 * i + 1] / 65535 * sy - sy / 2);
+    for (let t = 0; t < 3; t++) colReal[3 * j + t] = c[3 * i + t] / 255;
+    const g = k[i], sh = 0.78 + 0.22 * (q[3 * i + 2] / 65535);   // un poco de sombreado por altura
+    colCls[3 * j] = g ? 0.95 * sh : 0.886; colCls[3 * j + 1] = g ? 0.95 * sh : 0.137 * sh; colCls[3 * j + 2] = g ? 0.95 * sh : 0.102 * sh;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(colCls.slice(), 3));
+  pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 1.1, vertexColors: true, sizeAttenuation: true }));
+  scene.add(pts);
+  startPos = new THREE.Vector3(sx * 0.5, sx * 0.4, sy * 0.6);
+  startTarget = new THREE.Vector3(0, sz * 0.3, 0);
+  if (SHOT) { $("panel").classList.add("hide"); controls.autoRotate = false; }
+  else if (innerWidth > 700) {   // corre la nube a la derecha del panel
+    const off = new THREE.Vector3(-0.6, 0, 0.5).normalize().multiplyScalar(sx * 0.16);
+    startPos.add(off); startTarget.add(off);
+  }
+  camera.position.copy(startPos); controls.target.copy(startTarget);
+  $("stats").textContent = T.stats(fmt(n), fmt(meta.original), Math.round(sx), Math.round(sy), Math.round(meta.ground_share * 100));
+  $("status").classList.add("hide");
+  const v = location.hash.slice(1); if (["ground", "rest"].includes(v)) show(v);
+} catch (e) { $("msg").textContent = T.fail; console.error(e); }
+
+function show(v) {
+  if (!pts) return;
+  const g = pts.geometry;
+  if (v === "ground") g.setDrawRange(0, nG); else if (v === "rest") g.setDrawRange(nG, n - nG); else g.setDrawRange(0, n);
+  document.querySelectorAll("#show .btn").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v));
+}
+document.querySelectorAll("#show .btn").forEach(b => b.onclick = () => show(b.dataset.v));
+function setColor(real) {
+  pts.geometry.attributes.color.array.set(real ? colReal : colCls); pts.geometry.attributes.color.needsUpdate = true;
+  $("cReal").setAttribute("aria-pressed", real); $("cCls").setAttribute("aria-pressed", !real); $("lg").classList.toggle("hide", real);
+}
+$("cReal").onclick = () => setColor(true); $("cCls").onclick = () => setColor(false);
+$("size").oninput = e => pts.material.size = +e.target.value;
+$("reset").onclick = () => { camera.position.copy(startPos); controls.target.copy(startTarget); };
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener("resize", resize); resize();
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+</script>
+<script>addEventListener("keydown",e=>{if(e.key==="Escape"&&parent!==window)parent.postMessage("vivo:cerrar",location.origin)})</script>
+</body></html>
