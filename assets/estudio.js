@@ -161,3 +161,10 @@
   }
   window.Estudio = { setLang, setLight };
 })();
+
+/* WhatsApp: el número va invertido en data-wa; aquí se arma el enlace con un mensaje en el idioma de la página */
+(function(){const els=document.querySelectorAll("[data-wa]");if(!els.length)return;
+const set=()=>{const en=document.documentElement.dataset.lang==="en";
+const msg=en?"Hi Miguel, I saw your portfolio and I would like to talk about a GIS project.":"Hola Miguel, vi tu portafolio y quiero hablarte de un proyecto SIG.";
+els.forEach(a=>{const n=(a.dataset.wa||"").split("").reverse().join("");if(/^\d{10,15}$/.test(n))a.href="https://wa.me/"+n+"?text="+encodeURIComponent(msg)})};
+set();document.addEventListener("estudio:lang",set)})();
