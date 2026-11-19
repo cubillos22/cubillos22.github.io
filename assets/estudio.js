@@ -161,9 +161,3 @@
   }
   window.Estudio = { setLang, setLight };
 })();
-
-/* Mapa de países: se carga cuando la sección se acerca (no pesa en la carga inicial) */
-(function(){const w=document.querySelector("[data-world]");if(!w)return;let done=false;
-const go=()=>{if(done)return;done=true;fetch(w.dataset.world).then(r=>r.ok?r.text():"").then(t=>{if(t)w.innerHTML=t}).catch(()=>{})};
-if(!("IntersectionObserver" in window))return go();
-const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){go();io.disconnect()}},{rootMargin:"600px"});io.observe(w);addEventListener("load",()=>setTimeout(go,3000))})();
