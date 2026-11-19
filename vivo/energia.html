@@ -100,6 +100,19 @@ footer p{max-width:90ch}
 @media(max-width:900px){.app,.under{grid-template-columns:1fr}.side,.under .vt{border-left:0;border-top:1px solid var(--line);max-height:none}.app .map{min-height:420px;height:420px}
  .road li{grid-template-columns:1fr;gap:6px}.form{grid-template-columns:1fr}}
 
+
+/* ---- tablero ---- */
+.tb{border:1px solid var(--line);border-bottom:0;background:var(--p2);padding:14px 16px;display:grid;gap:12px}
+.tb-f{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}.tb-f .chips{margin:0}
+.tb-l{font-size:.78rem;color:var(--hint);text-transform:none}
+.tb-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.tb-k div{background:#000;padding:10px 12px}.tb-k b{display:block;font:italic 800 1.5rem/1.1 var(--serif)}.tb-k span{font-size:.76rem;color:var(--hint)}
+.bars{display:grid;gap:4px}
+.bar-r{display:grid;grid-template-columns:118px minmax(0,1fr) 64px;align-items:center;gap:8px;background:transparent;border:1px solid transparent;padding:3px 4px;cursor:pointer;text-align:left;width:100%}
+.bar-r:hover,.bar-r[aria-pressed=true]{border-color:#fff}.bar-r small{color:var(--hint);font-size:.74rem}
+.bar-t{position:relative;height:14px;background:#151515}.bar-t i{position:absolute;left:0;top:0;bottom:0;background:var(--ok)}
+.bar-t u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--terra)}
+.bar-r .v{font-size:.8rem;text-align:right}
 /* ---- nube 3D ---- */
 .v3{position:relative;border:1px solid var(--line);background:#050505;height:min(72vh,640px);min-height:420px;overflow:hidden}
 .v3 canvas{display:block;width:100%;height:100%;touch-action:none}
@@ -115,12 +128,41 @@ footer p{max-width:90ch}
 .v3 .pick{position:absolute;right:10px;bottom:10px;z-index:2;background:rgba(0,0,0,.88);border:1px solid var(--line);padding:8px 10px;font-size:.78rem;max-width:250px}
 .v3 .tag{position:absolute;z-index:1;font:italic 800 .78rem var(--serif);color:#fff;background:#ff7a1a;padding:1px 5px;transform:translate(-50%,-130%);pointer-events:none;white-space:nowrap}
 .v3 .hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-size:.72rem;color:var(--hint);z-index:1;pointer-events:none;white-space:nowrap}
-/* ---- diagramas ---- */
-.dg{border:1px solid var(--line);background:var(--p2);padding:18px 14px;margin:0 0 22px}
-.dg h3{font:italic 800 1.15rem var(--serif);text-transform:uppercase;margin:0 0 4px}.dg>p{margin:0 0 12px;color:#cfcfcf;font-size:.9rem}
-.dg svg{width:100%;height:auto;display:block}.dg .vert{display:none}
-.dg text{font-family:Archivo,Arial,sans-serif}
-@media(max-width:760px){.dg .hor{display:none}.dg .vert{display:block}.v3 .hint{display:none}}
+/* ---- diagramas interactivos ---- */
+.dg{border:1px solid var(--line);background:var(--p2);padding:16px 16px 14px;margin:0 0 22px}
+.dg-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.dg h3{font:italic 800 1.15rem var(--serif);text-transform:uppercase;margin:0 0 4px}.dg-h p{margin:0;color:#cfcfcf;font-size:.9rem;max-width:70ch}
+.rol{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 16px;position:sticky;top:54px;z-index:5;background:#000;padding:8px 0;border-bottom:1px solid var(--line)}
+.rol .chips{margin:0}
+.fl-stage{position:relative;padding:10px 30px;margin-top:12px}
+.fl-svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.fl-nodes{list-style:none;margin:0;padding:0;display:grid;gap:38px 46px;position:relative}
+.fl-nodes li{display:flex}
+.fl-n{width:100%;text-align:left;background:#000;color:#fff;border:1.5px solid #fff;padding:9px 11px 11px;cursor:pointer;display:flex;flex-direction:column;gap:5px;transition:opacity .25s,border-color .2s,box-shadow .2s,transform .2s}
+.fl-n .nn{background:var(--terra);font:italic 800 .78rem var(--serif);padding:1px 7px;align-self:flex-start}
+.fl-n b{font:italic 800 1rem/1.15 var(--serif)}
+.fl-n small{color:var(--ok);font-size:.78rem;line-height:1.3}
+.fl-n:hover,.fl-n:focus-visible{border-color:var(--terra)}
+.fl-n[aria-pressed=true]{border-color:var(--terra);box-shadow:inset 0 0 0 2px var(--terra)}
+.fl-n.act{box-shadow:0 0 0 3px var(--cab);transform:translateY(-2px)}
+.fl-n.dim{opacity:.18}
+.fl-n .lk{font-size:.7rem;color:var(--cab)}
+.fl-svg .ln{fill:none;stroke:var(--terra);stroke-width:2;transition:stroke-width .15s,stroke .15s,opacity .2s}
+.fl-svg .ed.hl .ln{stroke:#fff;stroke-width:3.5}
+.fl-svg .ed.dim{opacity:.15}
+.fl-svg .hit{fill:none;stroke:transparent;stroke-width:18;pointer-events:stroke;cursor:help}
+.fl-svg .tok{fill:var(--cab)}
+.fl-tip{position:absolute;z-index:3;background:#fff;color:#000;font-size:.76rem;padding:3px 7px;pointer-events:none;white-space:nowrap;transform:translate(-50%,-150%)}
+.fl-p{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.fl-p h4{font:italic 800 1rem var(--serif);text-transform:uppercase;margin:0}
+.fl-p dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 16px;margin:10px 0}
+.fl-p dt{font-size:.74rem;color:var(--hint)}.fl-p dd{margin:2px 0 0;font-size:.88rem}
+.fl-p .gain dd{color:var(--ok)}
+.fl-p .acts{display:flex;flex-wrap:wrap;gap:6px}
+.fl-p .acts span{font-size:.78rem;color:var(--cab);align-self:center}
+.play{white-space:nowrap}
+@media(max-width:760px){.rol{position:static}.fl-p dl{grid-template-columns:1fr 1fr}.fl-stage{padding:6px 26px}.fl-nodes{gap:30px}}
+@media(prefers-reduced-motion:reduce){.fl-n,.fl-svg .ln{transition:none}.fl-n.act{transform:none}}
 </style>
 </head><body>
 <header class="top"><div class="wrap">
@@ -164,6 +206,12 @@ footer p{max-width:90ch}
  <p class="num">02 / Activos en obra</p>
  <h2>Un corredor de 230 kV, medido desde el aire</h2>
  <p class="sub">Nube LiDAR pública de 14,8 millones de puntos sobre una línea real de 230 kV en las montañas de Colorado (EE. UU.). La nube no traía clasificados ni la vegetación ni los cables: las <b>estructuras se detectaron por su geometría</b> y el <b>conductor se modela</b> entre ellas. Mueva la flecha, el umbral de seguridad y el crecimiento de los árboles para ver qué tramos entran en alerta.</p>
+ <div class="tb" id="tablero" aria-label="Tablero del corredor">
+  <div class="tb-f"><span class="tb-l">Tramo</span><div class="chips" id="tbVano" role="group" aria-label="Filtrar por vano"></div>
+   <span class="tb-l">Distancia exigida</span><div class="chips" id="tbUm" role="group" aria-label="Distancia exigida"></div></div>
+  <div class="tb-k" id="tbK"></div>
+  <div class="tb-c"><p class="tb-l" style="margin:0 0 6px">Vegetación más cercana al cable, por vano · toque una barra para filtrar</p><div id="tbBars"></div></div>
+ </div>
  <div class="app">
   <div class="map" id="m2" aria-label="Mapa del corredor eléctrico"></div>
   <div class="side">
@@ -240,10 +288,11 @@ footer p{max-width:90ch}
 <section class="blk" id="flujos"><div class="wrap">
  <p class="num">03b / Flujos de trabajo</p>
  <h2>Cómo se arma y cómo se mantiene</h2>
- <p class="sub">Tres esquemas: de dónde sale el dato, cómo se usa para mantener los activos y qué papel juegan los drones en todo el ciclo. Debajo de cada paso va lo que gana la operación.</p>
- <div class="dg"><h3>A · De la captura en campo al tablero</h3><p>Ocho pasos entre el plan de vuelo y el dato listo para decidir.</p><div id="dgA"></div></div>
- <div class="dg"><h3>B · Ciclo de mantenimiento con evidencia</h3><p>Un ciclo cerrado: cada hallazgo termina con su evidencia en el mapa y el inventario al día.</p><div id="dgB"></div></div>
- <div class="dg"><h3>C · Drones en el ciclo de vida del activo</h3><p>Qué se vuela en cada etapa, con qué frecuencia orientativa, qué producto sale y quién lo usa. La frecuencia real la define el riesgo y el contrato de cada proyecto.</p><div id="dgC"></div></div>
+ <p class="sub">Toque cada paso para ver qué se hace, qué sale, quién lo usa y qué gana la operación. Pase el cursor (o el dedo) por una flecha para ver qué dato viaja. El selector de rol ilumina solo los pasos de cada equipo, y algunos pasos cambian el mapa, el tablero y la nube 3D de arriba.</p>
+ <div class="rol"><span class="tb-l">Ver por rol</span><div class="chips" id="rolSel" role="group" aria-label="Ver los pasos de un rol"></div><span class="tb-l" id="rolN"></span></div>
+ <div class="dg" id="flA"></div>
+ <div class="dg" id="flB"></div>
+ <div class="dg" id="flC"></div>
 </div></section>
 
 <!-- 4 · GEOGRAFÍA -->
@@ -390,21 +439,26 @@ function corredor(D) {
       const a = E[i], b = E[i + 1], u = (s - a.s) / (b.s - a.s), zz = z + g; let d = Infinity;
       for (let k = 0; k < 5; k++) { const c = cab(a, b, k, f, u); d = Math.min(d, Math.hypot(t - c.t, zz - c.z)); }
       if (d < vano[i].min) vano[i].min = d;
-      if (d < um) { vano[i].n++; out.push([s, t, zz, d]); }
+      if (d < um) { vano[i].n++; out.push([s, t, zz, d, i]); }
     }
     return {f, um, g, out, vano};
   }
   let estados = {};
   reEstado = st => { estados = st; render(); };
+  let sel = -1;                                       // vano filtrado en el tablero (-1 = todos)
   function render() {
     const R = calc();
     lyC.clearLayers(); lyV.clearLayers(); lyE.clearLayers();
+    const largoCab = E.slice(0, -1).map(() => 0);
     for (let i = 0; i < E.length - 1; i++) for (let k = 0; k < 5; k++) {
-      const pts = []; for (let u = 0; u <= 1.0001; u += .05) { const c = cab(E[i], E[i + 1], k, R.f, u); pts.push(ll(c.s, c.t)); }
-      L.polyline(pts, {color: k < 3 ? C.cab : "#bfe9ff", weight: k < 3 ? 1.6 : 1, opacity: .9}).addTo(lyC);
+      const pts = []; let p0 = null;
+      for (let u = 0; u <= 1.0001; u += .05) { const c = cab(E[i], E[i + 1], k, R.f, u); pts.push(ll(c.s, c.t)); if (p0) largoCab[i] += Math.hypot(c.s - p0.s, c.t - p0.t, c.z - p0.z); p0 = c; }
+      const on = sel < 0 || sel === i;
+      L.polyline(pts, {color: k < 3 ? C.cab : "#bfe9ff", weight: on && sel >= 0 ? 2.6 : k < 3 ? 1.6 : 1, opacity: on ? .95 : .2}).addTo(lyC);
     }
+    R.largoCab = largoCab;
     const cel = new Map();
-    R.out.forEach(([s, t, z, d]) => { const key = Math.floor(s / 10) + "," + Math.floor(t / 10); const v = cel.get(key); if (!v || d < v[3]) cel.set(key, [s, t, z, d]); });
+    R.out.filter(o => sel < 0 || o[4] === sel).forEach(([s, t, z, d]) => { const key = Math.floor(s / 10) + "," + Math.floor(t / 10); const v = cel.get(key); if (!v || d < v[3]) cel.set(key, [s, t, z, d]); });
     cel.forEach(([s, t, z, d]) => L.circleMarker(ll(s, t), {radius: 6, color: "#000", weight: 1, fillColor: d < R.um * .6 ? C.bad : C.warn, fillOpacity: .95})
       .bindPopup(`<h4>Vegetación cerca del cable</h4>Distancia 3D: <b>${nf(d, 2)} m</b><br>Umbral: ${nf(R.um)} m${R.g ? `<br>Incluye ${nf(R.g)} m de crecimiento supuesto` : ""}`).addTo(lyV));
     E.forEach((e, i) => {
@@ -417,13 +471,44 @@ function corredor(D) {
     $("k2").innerHTML = `<div><b>${E.length}</b><span>estructuras · ${E.length - 1} vanos</span></div><div><b>${nf(D.largo / 1000, 2)} km</b><span>de línea · 5 cables</span></div>
       <div><b style="color:${dmin < R.um ? C.bad : C.ok}">${nf(dmin, 2)} m</b><span>vegetación más cercana al cable</span></div><div><b style="color:${cel.size ? C.bad : C.ok}">${cel.size}</b><span>zonas de 10 m bajo el umbral (${nTot} puntos)</span></div>`;
     $("tv").innerHTML = `<tr><th>Vano</th><th>Largo</th><th>Veg. mín.</th><th>Puntos</th></tr>` + R.vano.map((v, i) => `<tr><td>${E[i].id}–${E[i + 1].id}${D.vanos[i].largo_atipico ? ' <span title="Vano 1,6 veces más largo que la mediana: verificar en campo si hay una estructura no detectada" style="color:' + C.warn + '">⚠</span>' : ""}</td><td>${nf(D.vanos[i].longitud_m)} m</td><td style="color:${v.min < R.um ? C.bad : "#fff"}">${nf(v.min, 1)} m</td><td>${v.n}</td></tr>`).join("");
-    perfil(R);
+    perfil(R); tablero(R, cel);
   }
+  function tablero(R, cel) {
+    const idx = sel < 0 ? R.vano.map((_, i) => i) : [sel];
+    const est = sel < 0 ? E : [E[sel], E[sel + 1]];
+    const largo = idx.reduce((a, i) => a + D.vanos[i].longitud_m, 0), cabT = idx.reduce((a, i) => a + R.largoCab[i], 0);
+    const inv = idx.filter(i => R.vano[i].min < R.um), pts = idx.reduce((a, i) => a + R.vano[i].n, 0), dmin = Math.min(...idx.map(i => R.vano[i].min));
+    const hm = est.reduce((a, e) => a + e.altura, 0) / est.length;
+    $("tbVano").innerHTML = [[-1, "Todo el corredor"]].concat(R.vano.map((_, i) => [i, `${E[i].id}–${E[i + 1].id}`])).map(([i, t]) => `<button type="button" class="chip" data-i="${i}" aria-pressed="${i === sel}">${t}</button>`).join("");
+    $("tbVano").querySelectorAll("button").forEach(b => b.onclick = () => setVano(+b.dataset.i));
+    $("tbUm").innerHTML = [3, 5, 10, 15].map(u => `<button type="button" class="chip" data-u="${u}" aria-pressed="${u === R.um}">${u} m</button>`).join("");
+    $("tbUm").querySelectorAll("button").forEach(b => b.onclick = () => setUmbral(+b.dataset.u));
+    $("tbK").innerHTML = `<div><b>${est.length}</b><span>estructuras${sel < 0 ? "" : " del vano"} · altura media ${nf(hm)} m</span></div>
+      <div><b>${idx.length}</b><span>${idx.length === 1 ? "vano" : "vanos"} · ${nf(largo, 0)} m de línea</span></div>
+      <div><b>${nf(cabT / 1000, 2)} km</b><span>de cable modelado (3 fases + 2 guardas)</span></div>
+      <div><b style="color:${dmin < R.um ? C.bad : C.ok}">${nf(dmin, 1)} m</b><span>vegetación más cercana al cable</span></div>
+      <div><b style="color:${inv.length ? C.bad : C.ok}">${inv.length}</b><span>${inv.length === 1 ? "vano" : "vanos"} con vegetación a menos de ${nf(R.um)} m</span></div>
+      <div><b style="color:${cel.size ? C.bad : C.ok}">${cel.size}</b><span>zonas de 10 m bajo el umbral (${pts} puntos)</span></div>`;
+    const MX = 20;
+    $("tbBars").innerHTML = `<div class="bars">` + R.vano.map((v, i) => `<button type="button" class="bar-r" data-i="${i}" aria-pressed="${i === sel}" aria-label="Vano ${E[i].id}–${E[i + 1].id}: vegetación a ${nf(v.min, 1)} m del cable">
+      <small>${E[i].id}–${E[i + 1].id} · ${nf(D.vanos[i].longitud_m, 0)} m${D.vanos[i].largo_atipico ? " ⚠" : ""}</small>
+      <span class="bar-t"><i style="width:${Math.min(100, v.min / MX * 100)}%;background:${v.min < R.um ? C.bad : C.ok}"></i><u style="left:${Math.min(100, R.um / MX * 100)}%" title="Umbral"></u></span>
+      <span class="v" style="color:${v.min < R.um ? C.bad : "#fff"}">${nf(v.min, 1)} m</span></button>`).join("") + `</div>`;
+    $("tbBars").querySelectorAll("button").forEach(b => b.onclick = () => setVano(sel === +b.dataset.i ? -1 : +b.dataset.i));
+  }
+  function setVano(i) {
+    sel = i; render();
+    const b = i < 0 ? BB : L.latLngBounds([[E[i].lat, E[i].lon], [E[i + 1].lat, E[i + 1].lon]]).pad(.35);
+    m.flyToBounds(b, {duration: .6});
+  }
+  function setUmbral(u) { $("umbral").value = u; render(); }
+  window.__corr = {setUmbral, setVano, ver: () => document.getElementById("corredor").scrollIntoView({behavior: "smooth"})};
   function perfil(R) {
     const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, Hh = cv.clientHeight; cv.width = W * dpr; cv.height = Hh * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, Hh);
     const s0 = -25, s1 = D.largo + 25, zs = P.map(p => p[1]).concat(E.map(e => e.zg + e.altura + 4));
     const z0 = Math.min(...zs) - 3, z1 = Math.max(...zs) + 3, X = s => 40 + (s - s0) / (s1 - s0) * (W - 50), Y = z => Hh - 22 - (z - z0) / (z1 - z0) * (Hh - 34);
+    if (sel >= 0) { ctx.fillStyle = "rgba(226,35,26,.12)"; ctx.fillRect(X(E[sel].s), 0, X(E[sel + 1].s) - X(E[sel].s), Hh - 22); }
     ctx.font = "11px Archivo, Arial"; ctx.fillStyle = "#777"; ctx.strokeStyle = "#222";
     for (let z = Math.ceil(z0 / 20) * 20; z < z1; z += 20) { ctx.beginPath(); ctx.moveTo(40, Y(z)); ctx.lineTo(W - 10, Y(z)); ctx.stroke(); ctx.fillText(z, 2, Y(z) + 4); }
     for (let s = 0; s < s1; s += 200) ctx.fillText(s + " m", X(s) - 10, Hh - 6);
@@ -431,7 +516,7 @@ function corredor(D) {
     for (const [s, t, z] of V) if (Math.abs(t) < 15) ctx.fillRect(X(s), Y(z + R.g), 1.3, 1.3);
     ctx.beginPath(); ctx.moveTo(X(P[0][0]), Hh - 22); P.forEach(([s, z]) => ctx.lineTo(X(s), Y(z))); ctx.lineTo(X(P[P.length - 1][0]), Hh - 22); ctx.closePath(); ctx.fillStyle = "#3b2f22"; ctx.fill();
     ctx.beginPath(); P.forEach(([s, z], i) => i ? ctx.lineTo(X(s), Y(z)) : ctx.moveTo(X(s), Y(z))); ctx.strokeStyle = "#8b6b3e"; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = C.bad; R.out.forEach(([s, t, z]) => { ctx.beginPath(); ctx.arc(X(s), Y(z), 2.6, 0, 7); ctx.fill(); });
+    ctx.fillStyle = C.bad; R.out.forEach(([s, t, z, d, i]) => { if (sel >= 0 && i !== sel) return; ctx.beginPath(); ctx.arc(X(s), Y(z), 2.6, 0, 7); ctx.fill(); });
     for (let i = 0; i < E.length - 1; i++) { ctx.beginPath(); for (let u = 0; u <= 1.0001; u += .02) { const c = cab(E[i], E[i + 1], 1, R.f, u); u ? ctx.lineTo(X(c.s), Y(c.z)) : ctx.moveTo(X(c.s), Y(c.z)); } ctx.strokeStyle = C.cab; ctx.lineWidth = 1.8; ctx.stroke(); }
     E.forEach(e => { ctx.strokeStyle = "#ff7a1a"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(e.s), Y(e.zg)); ctx.lineTo(X(e.s), Y(e.zg + e.altura)); ctx.stroke(); ctx.fillStyle = "#fff"; ctx.fillText(e.id, X(e.s) - 6, Y(e.zg + e.altura) - 5); });
   }
@@ -513,6 +598,8 @@ new IntersectionObserver((es, ob) => { if (es.some(e => e.isIntersecting)) { ob.
 const near = () => { const r = box.getBoundingClientRect(); if (r.top < innerHeight + 400 && r.bottom > -400) { removeEventListener("scroll", near); go(); } };
 addEventListener("scroll", near, {passive: true}); near();
 document.getElementById("v3go").onclick = go;
+let apply = null, pend = {};                                        // API para los diagramas: cambia coloración/umbral (en cola si aún no cargó)
+window.__v3api = {set(o) { Object.assign(pend, o); go(); if (apply) apply(); }, ver: () => box.scrollIntoView({behavior: "smooth", block: "center"})};
 async function getBin(url) {
   const r = await fetch(url); if (!r.ok) throw new Error(r.status);
   const total = +r.headers.get("content-length") || 0;     // con gzip es el tamaño comprimido: solo sirve para la barra
@@ -617,6 +704,9 @@ async function init() {
       if (pw) cam.setViewOffset(w2, h2, -pw / 2, 0, w2, h2); else cam.clearViewOffset(); cam.updateProjectionMatrix(); };
     new ResizeObserver(size).observe(box); size(); window.__v3size = size;
     place(); drawCab(); index(); paint(); home();
+    apply = () => { if (pend.mode) { mode = pend.mode; $("v3col").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.m === mode)); }
+      if (pend.umbral) { umbral = pend.umbral; $("v3u").value = umbral; } pend = {}; paint(); };
+    if (Object.keys(pend).length) apply();
     let visible = true; new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(box);
     const v = new THREE.Vector3();
     ren.setAnimationLoop(() => { if (!visible) return; ctl.update(); ren.render(scene, cam);
@@ -628,91 +718,156 @@ async function init() {
 }
 </script>
 <script>
-/* ---------------------------------------------------------------- 3b · diagramas SVG (propios) */
+/* ---------------------------------------------------------------- 3b · diagramas interactivos (HTML + SVG propios) */
 (() => {
-  const RED = "#E2231A", OK = "#3fb27f", MUT = "#a3a3a3";
+  const ROLES = [["todos", "Todos"], ["campo", "Campo"], ["oficina", "Oficina técnica"], ["mant", "Mantenimiento"], ["ger", "Gerencia"]];
+  const REDUCE = matchMedia("(prefers-reduced-motion: reduce)");
+  const NARROW = matchMedia("(max-width: 760px)");
   const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  const wrap = (t, m) => { const out = []; let l = ""; for (const w of t.split(" ")) { if ((l + " " + w).trim().length > m) { out.push(l.trim()); l = w; } else l += " " + w; } if (l.trim()) out.push(l.trim()); return out; };
-  const tx = (x, y, lines, size, fill, weight = 400, lh = 1.3, extra = "") => `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" font-weight="${weight}" ${extra}>` + lines.map((l, i) => `<tspan x="${x}" dy="${i ? size * lh : 0}">${esc(l)}</tspan>`).join("") + "</text>";
-  const J = 'font-family="Jost,Arial" font-style="italic"';
-  const arrowDef = id => `<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="${RED}"/></marker></defs>`;
-  const num = (x, y, k) => `<rect x="${x}" y="${y}" width="26" height="22" fill="${RED}"/><text x="${x + 13}" y="${y + 16}" font-size="13" font-weight="800" fill="#fff" text-anchor="middle" ${J}>${k}</text>`;
-  const vlist = (steps, id, indent) => {           // versión vertical para celular
-    const RW = 340; let y = 6, v = "";
-    steps.forEach(([t, g], i) => { const tl = wrap(t, 28), gl = wrap(g, 40), hh = 30 + tl.length * 17 + gl.length * 15;
-      v += `<rect x="${indent + 1}" y="${y}" width="${RW - indent}" height="${hh}" fill="#000" stroke="#fff" stroke-width="1.2"/>` + num(indent + 1, y, i + 1) + tx(indent + 36, y + 17, tl, 14, "#fff", 700, 1.2, J) + tx(indent + 12, y + 26 + tl.length * 17, gl, 11.5, OK, 400, 1.3);
-      y += hh; if (i < steps.length - 1) { v += `<line x1="${(RW + indent) / 2}" y1="${y + 1}" x2="${(RW + indent) / 2}" y2="${y + 19}" stroke="${RED}" stroke-width="2" marker-end="url(#${id}v)"/>`; y += 22; } });
-    return {v, y, RW};
+  const SVGNS = "http://www.w3.org/2000/svg";
+  let rol = "todos"; const flows = [];
+  // vínculos de un paso con los visores de la página
+  const LINKS = {
+    clase: {txt: "Nube 3D en «Clasificación»", go: "Ver en la nube 3D", run: () => window.__v3api && window.__v3api.set({mode: "clase"}), ver: () => window.__v3api && window.__v3api.ver()},
+    veg: {txt: "Nube 3D en «Distancia al cable» y mapa con umbral de 10 m", go: "Ver en el mapa", run: () => { window.__v3api && window.__v3api.set({mode: "dist", umbral: 10}); window.__corr && window.__corr.setUmbral(10); }, ver: () => window.__corr && window.__corr.ver()},
+    tablero: {txt: "Tablero del corredor", go: "Ir al tablero", run: () => {}, ver: () => document.getElementById("tablero").scrollIntoView({behavior: "smooth", block: "center"})},
+    form: {txt: "Formulario de inspección", go: "Ir al formulario", run: () => {}, ver: () => document.getElementById("inspeccion").scrollIntoView({behavior: "smooth"})},
+    sumi: {txt: "Tablero de suministro", go: "Ver el suministro", run: () => {}, ver: () => document.getElementById("suministro").scrollIntoView({behavior: "smooth"})},
   };
-  function lineal(steps, id) {
-    const W = 148, G = 14, n = steps.length, Wt = n * W + (n - 1) * G, H = 268;
-    let h = `<svg class="hor" viewBox="0 0 ${Wt} ${H}" role="img" aria-label="Diagrama de flujo de captura">${arrowDef(id + "h")}`;
-    steps.forEach(([t, g], i) => { const x = i * (W + G);
-      h += `<rect x="${x}" y="8" width="${W}" height="104" fill="#000" stroke="#fff" stroke-width="1.5"/>` + num(x, 8, i + 1) + tx(x + 10, 52, wrap(t, 15), 16, "#fff", 700, 1.2, J);
-      h += `<line x1="${x + W / 2}" y1="112" x2="${x + W / 2}" y2="128" stroke="${OK}" stroke-dasharray="3 3"/>` + tx(x + 4, 148, wrap(g, 20), 13.5, OK, 400, 1.3);
-      if (i < n - 1) h += `<line x1="${x + W + 1}" y1="60" x2="${x + W + G - 1}" y2="60" stroke="${RED}" stroke-width="2" marker-end="url(#${id}h)"/>`; });
-    const {v, y, RW} = vlist(steps, id, 0);
-    return h + `</svg><svg class="vert" viewBox="0 0 ${RW + 2} ${y + 4}" role="img" aria-label="Diagrama de flujo de captura">${arrowDef(id + "v")}${v}</svg>`;
+
+  function Flow(el, cfg) {
+    const N = cfg.nodes, n = N.length;
+    el.innerHTML = `<div class="dg-h"><div><h3>${esc(cfg.t)}</h3><p>${esc(cfg.d)}</p></div><button type="button" class="chip play" aria-pressed="false">▶ Reproducir el recorrido</button></div>
+      <div class="fl-stage"><svg class="fl-svg" aria-hidden="true"></svg><ol class="fl-nodes">${N.map((x, i) => `<li><button type="button" class="fl-n" data-i="${i}" aria-pressed="false" aria-controls="${el.id}-p">
+        <span class="nn">${i + 1}</span><b>${esc(x.t)}</b><small>→ ${esc(x.sale)}</small>${x.link ? `<span class="lk">◆ mueve ${x.link === "clase" || x.link === "veg" ? "el visor" : "la página"}</span>` : ""}</button></li>`).join("")}</ol><div class="fl-tip" hidden></div></div>
+      <div class="fl-p" id="${el.id}-p" aria-live="polite"><p style="margin:0;color:var(--hint);font-size:.86rem">Toque un paso para ver el detalle. Con las flechas del teclado se pasa de un paso a otro.</p></div>`;
+    const stage = el.querySelector(".fl-stage"), svg = el.querySelector(".fl-svg"), ol = el.querySelector(".fl-nodes"), tip = el.querySelector(".fl-tip");
+    const btns = [...el.querySelectorAll(".fl-n")], panel = el.querySelector(".fl-p"), play = el.querySelector(".play");
+    const edges = N.slice(0, -1).map((x, i) => ({a: i, b: i + 1, lab: cfg.e[i]}));
+    if (cfg.cycle) edges.push({a: n - 1, b: 0, lab: cfg.e[n - 1], ret: true});
+    if (cfg.loopLast) edges.push({a: n - 1, b: n - 1, lab: cfg.e[n - 1], self: true});
+    let paths = [], tok;
+    function layout() {
+      const cols = NARROW.matches ? 1 : cfg.cols;
+      ol.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+      btns.forEach((b, i) => { const row = Math.floor(i / cols), ci = i % cols, col = cfg.snake && row % 2 ? cols - 1 - ci : ci;
+        b.parentNode.style.gridRow = row + 1; b.parentNode.style.gridColumn = col + 1; });
+      const S = stage.getBoundingClientRect();
+      const R = btns.map(b => { const r = b.getBoundingClientRect(); return {l: r.left - S.left, r: r.right - S.left, t: r.top - S.top, b: r.bottom - S.top, cx: (r.left + r.right) / 2 - S.left, cy: (r.top + r.bottom) / 2 - S.top, h: r.height}; });
+      svg.setAttribute("viewBox", `0 0 ${S.width} ${S.height}`);
+      svg.innerHTML = `<defs><marker id="${el.id}-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#E2231A"/></marker></defs>`;
+      paths = edges.map((e, k) => {
+        const A = R[e.a], B = R[e.b]; let d;
+        if (e.self) d = `M${A.r},${A.t + 14} h16 v${A.h - 28} h-14`;
+        else if (e.ret) d = `M${A.l},${A.cy} H10 V${B.cy} H${B.l - 2}`;
+        else if (Math.abs(A.t - B.t) < 6) d = B.l > A.l ? `M${A.r},${A.cy} H${B.l - 2}` : `M${A.l},${A.cy} H${B.r + 2}`;
+        else d = `M${A.cx},${A.b} V${(A.b + B.t) / 2} H${B.cx} V${B.t - 2}`;
+        const g = document.createElementNS(SVGNS, "g"); g.setAttribute("class", "ed"); g.dataset.k = k;
+        g.innerHTML = `<path class="hit" d="${d}"/><path class="ln" d="${d}" marker-end="url(#${el.id}-m)"/>`;
+        g.addEventListener("pointerenter", ev => { hl([k]); tip.hidden = false; tip.textContent = e.lab; moveTip(ev); });
+        g.addEventListener("pointermove", moveTip);
+        g.addEventListener("pointerleave", () => { hl([]); tip.hidden = true; });
+        svg.appendChild(g); return g.querySelector(".ln");
+      });
+      tok = document.createElementNS(SVGNS, "circle"); tok.setAttribute("r", 6); tok.setAttribute("class", "tok"); tok.style.display = "none"; svg.appendChild(tok);
+      applyRole();
+    }
+    function moveTip(ev) { const S = stage.getBoundingClientRect(); tip.style.left = ev.clientX - S.left + "px"; tip.style.top = ev.clientY - S.top + "px"; }
+    function hl(ks) { svg.querySelectorAll(".ed").forEach(g => g.classList.toggle("hl", ks.includes(+g.dataset.k))); }
+    btns.forEach((b, i) => {
+      b.addEventListener("pointerenter", () => hl(edges.map((e, k) => e.a === i || e.b === i ? k : -1)));
+      b.addEventListener("pointerleave", () => hl([]));
+      b.addEventListener("focus", () => hl(edges.map((e, k) => e.a === i || e.b === i ? k : -1)));
+      b.addEventListener("blur", () => hl([]));
+      b.addEventListener("click", () => select(i));
+      b.addEventListener("keydown", ev => {
+        const k = {ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1}[ev.key];
+        if (k) { ev.preventDefault(); btns[(i + k + n) % n].focus(); }
+        else if (ev.key === "Home") { ev.preventDefault(); btns[0].focus(); } else if (ev.key === "End") { ev.preventDefault(); btns[n - 1].focus(); }
+      });
+    });
+    function select(i) {
+      const x = N[i]; btns.forEach((b, j) => b.setAttribute("aria-pressed", j === i));
+      const L = x.link ? LINKS[x.link] : null; if (L) L.run();
+      const roles = x.roles.map(r => ROLES.find(q => q[0] === r)[1]).join(", ");
+      panel.innerHTML = `<h4>${i + 1} · ${esc(x.t)}</h4><dl><div><dt>Qué se hace</dt><dd>${esc(x.hace)}</dd></div><div><dt>Qué dato o producto sale</dt><dd>${esc(x.sale)}</dd></div>
+        <div><dt>Quién lo usa</dt><dd>${esc(x.usa)}</dd></div><div class="gain"><dt>Qué gana la operación</dt><dd>${esc(x.gana)}</dd></div></dl>
+        <div class="acts"><span style="color:var(--hint)">Rol: ${esc(roles)}</span>${L ? `<span>◆ Cambié: ${esc(L.txt)}</span><button type="button" class="chip">${esc(L.go)} ↓</button>` : ""}</div>`;
+      if (L) panel.querySelector(".acts button").onclick = L.ver;
+    }
+    function applyRole() {
+      const on = N.map(x => rol === "todos" || x.roles.includes(rol));
+      btns.forEach((b, i) => b.classList.toggle("dim", !on[i]));
+      svg.querySelectorAll(".ed").forEach(g => { const e = edges[+g.dataset.k]; g.classList.toggle("dim", !(on[e.a] && on[e.b])); });
+      return on.filter(Boolean).length;
+    }
+    // animación del recorrido del dato
+    let playing = false, raf = 0, t0 = 0, step = 0, timer = 0;
+    const seq = edges.filter(e => !e.self).map(e => edges.indexOf(e));
+    const DUR = 1300;
+    function setAct(i) { btns.forEach((b, j) => b.classList.toggle("act", j === i)); }
+    function frame(ts) {
+      if (!playing) return;
+      if (!t0) t0 = ts;
+      const k = Math.floor((ts - t0) / DUR), f = ((ts - t0) % DUR) / DUR, ei = seq[k % seq.length], p = paths[ei];
+      if (!p) { raf = requestAnimationFrame(frame); return; }
+      const L = p.getTotalLength(), pt = p.getPointAtLength(L * f);
+      tok.style.display = ""; tok.setAttribute("cx", pt.x); tok.setAttribute("cy", pt.y);
+      setAct(f < .15 ? edges[ei].a : f > .85 ? edges[ei].b : -1);
+      if (!cfg.cycle && k % seq.length === seq.length - 1 && f > .97) t0 = ts + 600;   // pausa al final y vuelve a empezar
+      raf = requestAnimationFrame(frame);
+    }
+    function start() {
+      playing = true; play.setAttribute("aria-pressed", "true"); play.textContent = "❚❚ Pausar el recorrido";
+      if (REDUCE.matches) { tok.style.display = "none"; const tick = () => { setAct(step % n); step++; }; tick(); timer = setInterval(tick, 1500); }
+      else { t0 = 0; raf = requestAnimationFrame(frame); }
+    }
+    function stop() { playing = false; play.setAttribute("aria-pressed", "false"); play.textContent = "▶ Reproducir el recorrido"; cancelAnimationFrame(raf); clearInterval(timer); setAct(-1); if (tok) tok.style.display = "none"; }
+    play.onclick = () => { auto = false; playing ? stop() : start(); };
+    let auto = !REDUCE.matches;                      // arranca solo al verse, salvo que el usuario prefiera menos movimiento
+    new IntersectionObserver(es => { const v = es[0].isIntersecting; if (v && auto && !playing) start(); if (!v && playing && auto) stop(); }, {threshold: .35}).observe(el);
+    new ResizeObserver(() => { layout(); }).observe(stage);
+    NARROW.addEventListener("change", layout);
+    layout();
+    return {applyRole, layout};
   }
-  function ciclo(steps, centro, id) {
-    const W = 1100, H = 580, cx = W / 2, cy = H / 2, rx = 405, ry = 215, n = steps.length, bw = 200;
-    let h = `<svg class="hor" viewBox="0 0 ${W} ${H}" role="img" aria-label="Ciclo de mantenimiento">${arrowDef(id + "h")}`;
-    h += `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="${RED}" stroke-width="2" stroke-dasharray="2 7"/>`;
-    for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + (i + .5) * 2 * Math.PI / n;
-      h += `<path d="M${cx + rx * Math.cos(a - .05)},${cy + ry * Math.sin(a - .05)} L${cx + rx * Math.cos(a + .06)},${cy + ry * Math.sin(a + .06)}" stroke="${RED}" stroke-width="3" marker-end="url(#${id}h)"/>`; }
-    const cl = wrap(centro, 14);
-    h += `<circle cx="${cx}" cy="${cy}" r="92" fill="${RED}"/>` + `<text font-size="19" fill="#fff" font-weight="800" text-anchor="middle" ${J}>` + cl.map((l, i) => `<tspan x="${cx}" y="${cy - (cl.length - 1) * 11 + i * 22 + 6}">${esc(l)}</tspan>`).join("") + "</text>";
-    steps.forEach(([t, g], i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n, x = cx + rx * Math.cos(a), y = cy + ry * Math.sin(a);
-      const tl = wrap(t, 22), gl = wrap(g, 28), hh = 22 + tl.length * 17 + gl.length * 16, X = Math.min(W - bw - 2, Math.max(2, x - bw / 2)), Y = Math.min(H - hh - 2, Math.max(2, y - hh / 2));
-      h += `<rect x="${X}" y="${Y}" width="${bw}" height="${hh}" fill="#000" stroke="#fff" stroke-width="1.5"/>` + num(X, Y, i + 1) + tx(X + 34, Y + 16, tl, 14, "#fff", 700, 1.2, J) + tx(X + 8, Y + 24 + tl.length * 17, gl, 12.5, OK, 400, 1.27); });
-    let {v, y, RW} = vlist(steps, id, 20);
-    v = `<path d="M21,${y - 14} H6 V17 H19" fill="none" stroke="${RED}" stroke-width="2" marker-end="url(#${id}v)"/>` + v + tx(6, y + 18, ["Vuelve al paso 1 con el inventario SIG al día."], 12, MUT);
-    return h + `</svg><svg class="vert" viewBox="0 0 ${RW + 2} ${y + 26}" role="img" aria-label="Ciclo de mantenimiento">${arrowDef(id + "v")}${v}</svg>`;
-  }
-  function etapas(cols, filas) {
-    const n = cols.length, CW = 262, G = 12, LW = 112, W = LW + n * CW + (n - 1) * G;
-    const rowH = filas.map((_, r) => Math.max(...cols.map(c => wrap(c.v[r], 33).length)) * 16.5 + 20);
-    const top = 100, H = top + rowH.reduce((a, b) => a + b, 0) + 60;
-    let h = `<svg class="hor" viewBox="0 0 ${W} ${H}" role="img" aria-label="Drones en el ciclo de vida del activo">${arrowDef("dgCh")}`;
-    h += `<line x1="${LW}" y1="16" x2="${W - 4}" y2="16" stroke="${RED}" stroke-width="2" marker-end="url(#dgCh)"/>` + tx(LW, 10, [""], 1, "#000");
-    cols.forEach((c, i) => { const x = LW + i * (CW + G);
-      h += `<rect x="${x}" y="30" width="${CW}" height="52" fill="${RED}"/>` + tx(x + 10, 62, wrap(c.t, 30), 17, "#fff", 800, 1.15, J); });
-    let y = top;
-    filas.forEach((f, r) => { h += tx(0, y + 12, wrap(f, 14), 12, MUT, 600, 1.25);
-      cols.forEach((c, i) => { const x = LW + i * (CW + G); h += `<rect x="${x}" y="${y - 6}" width="${CW}" height="${rowH[r] - 4}" fill="#000" stroke="#2f2f2f"/>` + tx(x + 10, y + 13, wrap(c.v[r], 33), 13, "#fff", 400, 1.25); });
-      y += rowH[r]; });
-    cols.forEach((c, i) => { const x = LW + i * (CW + G); h += tx(x + 4, y + 14, wrap("→ " + c.g, 34), 13, OK, 400, 1.3); });
-    const RW = 340; let yy = 4, v = "";
-    cols.forEach(c => { const lines = filas.map((f, r) => [f, wrap(c.v[r], 40)]), gl = wrap("→ " + c.g, 42);
-      const hh = 46 + lines.reduce((a, [, l]) => a + 18 + l.length * 15, 0) + gl.length * 15 + 6;
-      v += `<rect x="1" y="${yy}" width="${RW}" height="${hh}" fill="#000" stroke="#fff" stroke-width="1.2"/><rect x="1" y="${yy}" width="${RW}" height="32" fill="${RED}"/>` + tx(10, yy + 22, [c.t], 15, "#fff", 800, 1.2, J);
-      let y2 = yy + 52; lines.forEach(([f, l]) => { v += tx(10, y2, [f], 11, MUT, 600) + tx(10, y2 + 15, l, 12, "#fff", 400, 1.25); y2 += 18 + l.length * 15; });
-      v += tx(10, y2 + 4, gl, 12, OK, 400, 1.25); yy += hh + 12; });
-    return h + `</svg><svg class="vert" viewBox="0 0 ${RW + 2} ${yy}" role="img" aria-label="Drones en el ciclo de vida del activo">${v}</svg>`;
-  }
-  document.getElementById("dgA").innerHTML = lineal([
-    ["Planeación del vuelo", "Área, altura y traslapo según el producto que se necesita: se vuela una vez y bien."],
-    ["Control en tierra", "Puntos GNSS amarran el dato a coordenadas reales: medidas defendibles."],
-    ["Vuelo con dron LiDAR o fotogrametría", "El corredor se captura en horas, sin exponer cuadrillas en terreno difícil."],
-    ["Descarga y control de calidad", "Cobertura, densidad y exactitud se revisan antes de procesar: no hay que volver a volar."],
-    ["Procesamiento y clasificación", "Suelo, vegetación, estructuras y cables separados: la nube se vuelve medible."],
-    ["Extracción de activos", "Estructuras, vanos y cables con ID y atributos, sin digitalizar a mano."],
-    ["Inventario SIG", "Una sola fuente de verdad: cantidades, distancias e historial por activo."],
-    ["Tablero", "Lo que hay que decidir hoy, filtrado por tramo, riesgo o contratista."]], "dgA");
-  document.getElementById("dgB").innerHTML = ciclo([
-    ["Inspección programada", "Recorridos y frecuencias definidos por riesgo, no por costumbre."],
-    ["Detección de hallazgos", "Vegetación, daños y faltantes ubicados sobre el activo exacto."],
-    ["Priorización por riesgo", "Primero lo que está más cerca del cable o más expuesto."],
-    ["Orden de trabajo", "La cuadrilla sale con mapa, ubicación y foto del hallazgo."],
-    ["Ejecución en campo", "Formulario en el celular, también sin señal."],
-    ["Cierre con evidencia georreferenciada", "Foto y GPS del antes y el después: un cierre que se puede verificar."],
-    ["Actualización del inventario", "El siguiente ciclo arranca con el dato al día."]], "Inventario SIG al día", "dgB");
-  document.getElementById("dgC").innerHTML = etapas([
-    {t: "Trazado y diseño", v: ["LiDAR y ortofoto del corredor propuesto", "Una vez, antes de diseñar", "Modelo de terreno, perfil de la línea y predios afectados", "Diseño, gestión predial y ambiental"], g: "Diseño sobre el terreno real: menos cambios en obra."},
-    {t: "Construcción", v: ["Fotogrametría de frentes de obra y acopios", "Periódica durante la obra, según el contrato", "Ortofoto de avance, conteo de acopios y estructuras izadas", "Gerencia de proyecto, interventoría y seguimiento de suministro"], g: "Avance verificable sin viajar a cada frente."},
-    {t: "Puesta en servicio", v: ["LiDAR as-built e inspección visual cercana", "Una vez, al terminar", "Inventario as-built y distancias de seguridad iniciales", "Operador de la red y entrega al cliente"], g: "Línea de base para todo el mantenimiento."},
-    {t: "Operación y mantenimiento", v: ["LiDAR del corredor e inspección visual o termográfica", "Periódica según el riesgo, y después de tormentas o incendios", "Alertas de vegetación, daños y puntos calientes", "Mantenimiento, contratistas de poda y aseguradoras"], g: "Poda e intervenciones solo donde hacen falta."}],
-    ["Qué se vuela", "Cada cuánto (orientativo)", "Qué producto sale", "Quién lo usa"]);
+
+  const A = {t: "A · De la captura en campo al tablero", d: "Ocho pasos entre el plan de vuelo y el dato listo para decidir.", cols: 4, snake: true,
+    e: ["plan de vuelo y polígono", "puntos de control GNSS", "nube cruda, fotos y trayectoria", "nube aprobada", "nube clasificada y modelo de terreno", "activos y alertas", "indicadores por tramo"],
+    nodes: [
+      {t: "Planeación del vuelo", hace: "Definir área, altura, traslapo y sensor según el producto que se necesita: LiDAR para el corredor, fotogrametría para la ortofoto.", sale: "Plan de vuelo y polígono del área", usa: "Piloto y topógrafo", gana: "Se vuela una vez y bien: sin vuelos repetidos.", roles: ["campo", "oficina"]},
+      {t: "Control en tierra", hace: "Medir puntos de control y de chequeo con GNSS antes o durante el vuelo.", sale: "Coordenadas de control con su precisión", usa: "Topógrafo y procesamiento", gana: "Medidas amarradas a coordenadas reales y defendibles.", roles: ["campo"]},
+      {t: "Vuelo con dron LiDAR o fotogrametría", hace: "Volar el corredor con trayectoria registrada.", sale: "Nube cruda, fotos y trayectoria", usa: "Piloto", gana: "El corredor se captura en horas, sin cuadrillas en terreno difícil.", roles: ["campo"]},
+      {t: "Descarga y control de calidad", hace: "Revisar cobertura, densidad de puntos, huecos y exactitud frente a los puntos de chequeo.", sale: "Informe de control de calidad", usa: "Oficina técnica", gana: "Se sabe antes de procesar si hay que repetir algo.", roles: ["campo", "oficina"]},
+      {t: "Procesamiento y clasificación", hace: "Separar suelo, vegetación, estructuras y cables; calcular el modelo de terreno y la altura de cada punto.", sale: "Nube clasificada y modelo de terreno", usa: "Oficina técnica", gana: "La nube se vuelve medible.", roles: ["oficina"], link: "clase"},
+      {t: "Extracción de activos", hace: "Detectar estructuras, vanos y cables, y medir la distancia de la vegetación al conductor.", sale: "Capas de activos con ID y alertas de vegetación", usa: "Oficina técnica y mantenimiento", gana: "Inventario sin digitalizar a mano.", roles: ["oficina", "mant"], link: "veg"},
+      {t: "Inventario SIG", hace: "Cargar activos y hallazgos a una base geográfica con historial.", sale: "Base de datos geográfica (GeoPackage o servicio web)", usa: "Todos los equipos", gana: "Una sola fuente de verdad, con historial por activo.", roles: ["oficina", "mant", "ger"]},
+      {t: "Tablero", hace: "Indicadores por tramo, riesgo y contratista, con filtros.", sale: "Tablero web y reportes", usa: "Gerencia y cliente final", gana: "Decidir con el dato del día.", roles: ["ger"], link: "tablero"}]};
+  const B = {t: "B · Ciclo de mantenimiento con evidencia", d: "Un ciclo cerrado: cada hallazgo termina con su evidencia en el mapa y el inventario al día.", cols: 4, snake: true, cycle: true,
+    e: ["tramos a revisar", "hallazgos ubicados", "lista priorizada", "orden georreferenciada", "registro con fotos", "estado cerrado", "historial para el siguiente ciclo"],
+    nodes: [
+      {t: "Inspección programada", hace: "Programar recorridos o vuelos por tramo según el riesgo y el historial.", sale: "Plan de inspección por tramo", usa: "Mantenimiento", gana: "Frecuencia por riesgo, no por costumbre.", roles: ["mant", "ger"]},
+      {t: "Detección de hallazgos", hace: "Identificar vegetación cerca del cable, daños y faltantes desde la nube, las fotos o en campo.", sale: "Hallazgos ubicados sobre el activo", usa: "Oficina técnica y campo", gana: "Cada hallazgo con su ubicación exacta.", roles: ["campo", "oficina"], link: "veg"},
+      {t: "Priorización por riesgo", hace: "Ordenar los hallazgos por distancia al cable, criticidad del tramo y exposición.", sale: "Lista priorizada", usa: "Mantenimiento y gerencia", gana: "Primero lo que más riesgo tiene.", roles: ["mant", "ger"], link: "tablero"},
+      {t: "Orden de trabajo", hace: "Generar la orden con mapa, coordenadas, fotos y alcance.", sale: "Orden de trabajo georreferenciada", usa: "Mantenimiento y contratista", gana: "La cuadrilla sale sabiendo a dónde y a qué.", roles: ["mant"]},
+      {t: "Ejecución en campo", hace: "Podar o reparar y registrar en el formulario del celular, también sin señal.", sale: "Registro de campo con fotos", usa: "Cuadrilla y contratista", gana: "Menos visitas repetidas.", roles: ["campo"], link: "form"},
+      {t: "Cierre con evidencia georreferenciada", hace: "Foto y GPS del antes y el después, con validación del supervisor.", sale: "Evidencia georreferenciada del cierre", usa: "Supervisor y gerencia", gana: "Un cierre verificable sin ir al sitio.", roles: ["campo", "mant"]},
+      {t: "Actualización del inventario", hace: "El estado del activo y del hallazgo se actualiza en la base.", sale: "Inventario al día con historial", usa: "Todos los equipos", gana: "El siguiente ciclo arranca con el dato al día.", roles: ["oficina", "ger"]}]};
+  const Cc = {t: "C · Drones en el ciclo de vida del activo", d: "Qué se vuela en cada etapa y para qué. La frecuencia es orientativa: la define el riesgo y el contrato de cada proyecto.", cols: 4, loopLast: true,
+    e: ["terreno y trazado", "obra terminada", "línea de base", "se repite según el riesgo"],
+    nodes: [
+      {t: "Trazado y diseño", hace: "Vuelo LiDAR y ortofoto del corredor propuesto, una vez antes de diseñar.", sale: "Modelo de terreno, perfil de la línea y predios afectados", usa: "Diseño, gestión predial y ambiental", gana: "Diseño sobre el terreno real: menos cambios en obra.", roles: ["oficina", "ger"]},
+      {t: "Construcción", hace: "Fotogrametría periódica de frentes de obra y acopios, según el contrato.", sale: "Ortofoto de avance, conteo de acopios y estructuras izadas", usa: "Gerencia de proyecto, interventoría y seguimiento de suministro", gana: "Avance verificable sin viajar a cada frente.", roles: ["campo", "ger"], link: "sumi"},
+      {t: "Puesta en servicio", hace: "LiDAR as-built e inspección visual cercana, una vez al terminar.", sale: "Inventario as-built y distancias de seguridad iniciales", usa: "Operador de la red y cliente", gana: "Línea de base para todo el mantenimiento.", roles: ["oficina", "mant"], link: "clase"},
+      {t: "Operación y mantenimiento", hace: "LiDAR del corredor e inspección visual o termográfica, periódica según el riesgo y después de tormentas o incendios.", sale: "Alertas de vegetación, daños y puntos calientes", usa: "Mantenimiento, contratistas de poda y aseguradoras", gana: "Poda e intervenciones solo donde hacen falta.", roles: ["mant", "campo"], link: "veg"}]};
+
+  flows.push(Flow(document.getElementById("flA"), A), Flow(document.getElementById("flB"), B), Flow(document.getElementById("flC"), Cc));
+  const sel = document.getElementById("rolSel");
+  sel.innerHTML = ROLES.map(([k, t]) => `<button type="button" class="chip" data-r="${k}" aria-pressed="${k === rol}">${t}</button>`).join("");
+  const upd = () => { const c = flows.reduce((a, f) => a + f.applyRole(), 0), tot = A.nodes.length + B.nodes.length + Cc.nodes.length;
+    document.getElementById("rolN").textContent = rol === "todos" ? `${tot} pasos` : `${c} de ${tot} pasos son de este rol`; };
+  sel.querySelectorAll("button").forEach(b => b.onclick = () => { rol = b.dataset.r; sel.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); upd(); });
+  upd();
 })();
 </script>
 </body></html>
